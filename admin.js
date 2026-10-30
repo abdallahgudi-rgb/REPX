@@ -223,7 +223,7 @@ function renderProductos() {
       <div style="display:grid;gap:8px;min-width:0">
         <div class="item-head"><strong>${esc(p.nombre)}</strong><span class="price">${dinero(p.precio)}</span></div>
         <div class="stock">${(p.tallas || []).map(t => `<span class="${t.stock <= 0 ? "cero" : t.stock <= 2 ? "bajo" : ""}">${esc(t.t)}: ${t.stock}</span>`).join("") || `<span class="cero">Sin tallas</span>`}</div>
-        <div class="kv"><span>${{ hombre: "Hombre", mujer: "Mujer", unisex: "Unisex" }[p.categoria] || ""}</span><span>Total: <b>${total}</b></span>${out ? `<span class="pill cancelado">Agotado</span>` : ""}</div>
+        <div class="kv"><span>${{ hombre: "Hombre", mujer: "Mujer" }[p.categoria] || ""}</span><span>Total: <b>${total}</b></span>${out ? `<span class="pill cancelado">Agotado</span>` : ""}</div>
         <div class="actions"><button class="btn" data-a="editar">Editar</button>
           <button class="btn ${p.agotado ? "ok" : ""}" data-a="agotado">${p.agotado ? "Quitar agotado" : "Marcar agotado"}</button></div>
       </div></div>`;

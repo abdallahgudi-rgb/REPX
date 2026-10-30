@@ -1,5 +1,5 @@
 // REPX: abre rápido y funciona con mala señal. Código siempre fresco desde internet; imágenes guardadas.
-const CACHE = "repx-v2";
+const CACHE = "repx-v3";
 const BASE = ["./", "index.html", "styles.css", "firebase.js", "tienda.js", "manifest.webmanifest", "img/logo-repx.png", "img/bulldog.png", "img/icon-192.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(BASE)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener("activate", e => {

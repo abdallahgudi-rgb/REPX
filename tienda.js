@@ -26,7 +26,7 @@ async function cargar() {
   }
 }
 function render() {
-  const lista = productos.filter(p => filtro === "todo" || p.categoria === filtro || p.categoria === "unisex");
+  const lista = productos.filter(p => filtro === "todo" || p.categoria === filtro);
   if (!lista.length) {
     $("#grid").innerHTML = `<div class="empty"><img src="img/bulldog.png" alt=""><p>${productos.length ? "No hay productos en esta categoría por ahora." : "Muy pronto vas a ver los productos aquí."}</p></div>`;
     return;
@@ -60,7 +60,7 @@ $("#grid").addEventListener("click", e => {
   const c = e.target.closest(".card[data-id]"); if (!c) return;
   actual = productos.find(p => p.id === c.dataset.id); talla = null;
   const out = estaAgotado(actual);
-  $("#pdCat").textContent = { hombre: "Hombre", mujer: "Mujer", unisex: "Unisex" }[actual.categoria] || "";
+  $("#pdCat").textContent = { hombre: "Hombre", mujer: "Mujer" }[actual.categoria] || "";
   $("#pdImg").src = actual.foto || ""; $("#pdImg").alt = actual.nombre; $("#pdImg").hidden = !actual.foto;
   $("#pdTitle").textContent = actual.nombre; $("#pdDesc").textContent = actual.descripcion || "";
   $("#pdPrice").textContent = dinero(actual.precio);
@@ -242,3 +242,44 @@ try { if ("serviceWorker" in navigator && location.protocol === "https:") naviga
 
 count();
 cargar();
+
+/* ---------- galería que se desliza ---------- */
+(() => {
+  const reel = $("#reel"), track = $("#reelTrack"), word = $("#reelWord"), collar = $("#reelCollar"), num = $("#reelNum");
+  const figs = [...track.querySelectorAll(".r")];
+  const calma = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (calma) { reel.classList.add("static"); return; }
+  let maxX = 0, ticking = false;
+  function medir() {
+    maxX = Math.max(0, track.scrollWidth - innerWidth);
+    reel.style.height = (maxX + innerHeight * 1.15) + "px";
+    pintar();
+  }
+  function pintar() {
+    ticking = false;
+    const r = reel.getBoundingClientRect();
+    const total = reel.offsetHeight - innerHeight;
+    const p = Math.min(1, Math.max(0, -r.top / (total || 1)));
+    track.style.transform = `translate3d(${-p * maxX}px,0,0)`;
+    word.style.transform = `translate3d(${-p * innerWidth * 1.6}px,-50%,0)`;
+    const barW = collar.parentElement.clientWidth - 32;
+    collar.style.transform = `translateX(${p * barW}px)`;
+    let cerca = 0, dmin = 1e9;
+    const mid = innerWidth / 2;
+    figs.forEach((f, i) => {
+      const b = f.getBoundingClientRect();
+      const d = Math.abs(b.left + b.width / 2 - mid);
+      if (d < dmin) { dmin = d; cerca = i; }
+      const k = Math.min(1, d / (innerWidth * 0.6));
+      f.style.setProperty("--dim", (k * 0.55).toFixed(3));
+      f.style.transform = `scale(${(1 - k * 0.08).toFixed(3)}) rotate(${((i % 2 ? 1 : -1) * k * 1.5).toFixed(2)}deg)`;
+    });
+    num.textContent = String(cerca + 1).padStart(2, "0");
+  }
+  addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(pintar); } }, { passive: true });
+  addEventListener("resize", medir);
+  figs.forEach(f => f.querySelector("img").addEventListener("load", medir));
+  // carga las fotos antes de llegar a la galería
+  figs.forEach(f => f.querySelector("img").loading = "eager");
+  medir();
+})();

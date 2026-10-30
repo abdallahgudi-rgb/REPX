@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="REPX: ropa deportiva para gym. No excuses. Just reps. Pago en USDT.">
+<title>REPX Tienda</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#0f0f11">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="REPX">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="img/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,800;1,800;1,900&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: banda de marca negra, foto a sangre, catálogo en rejilla con etiquetas de talla tipo etiqueta de prenda */
+:root {
+  --ink: #0f0f11;      /* fondo, negro de empaque */
+  --iron: #1b1b1f;     /* superficies */
+  --line: #2e2d33;     /* divisores */
+  --bone: #ece6dc;     /* texto principal, tono "bone" de la colección */
+  --dust: #a19c94;     /* texto secundario */
+  --plum: #8b5a78;     /* acento, tomado del set Court ciruela */
+  --plum-ink: #f6eef3;
+  --display: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
+  --body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--ink); color: var(--bone); font-family: var(--body); font-size: 15px; line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--ink); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+img { display: block; max-width: 100%; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--plum); outline-offset: 2px; }
+.label { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--dust); }
+
+/* header */
+header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: color-mix(in srgb, var(--ink) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 12px; }
+header .logo img { height: 26px; width: auto; }
+nav { display: flex; gap: 22px; }
+nav a { color: var(--dust); text-decoration: none; font-family: var(--display); font-weight: 600; font-size: 17px; letter-spacing: .06em; text-transform: uppercase; }
+nav a:hover { color: var(--bone); }
+.cart-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--bone); color: var(--ink); border: 0; border-radius: 2px; padding: 8px 14px; font-family: var(--display); font-weight: 800; font-size: 16px; letter-spacing: .06em; text-transform: uppercase; }
+.cart-btn b { background: var(--ink); color: var(--bone); min-width: 22px; height: 22px; border-radius: 11px; display: grid; place-items: center; font-size: 13px; font-family: var(--mono); }
+@media (max-width: 640px) { nav { display: none; } }
+
+/* hero */
+.hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); }
+.hero-grid { display: grid; grid-template-columns: 1.1fr 1fr; align-items: stretch; min-height: 560px; }
+.hero-copy { display: flex; flex-direction: column; justify-content: flex-end; gap: 22px; padding-block: 56px; min-width: 0; }
+.hero h1 { font-family: var(--display); font-style: italic; font-weight: 900; text-transform: uppercase; font-size: clamp(64px, 11vw, 148px); line-height: .84; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.hero h1 span { display: block; -webkit-text-stroke: 2px var(--bone); color: transparent; }
+.hero p { max-width: 38ch; color: var(--dust); font-size: 17px; margin: 0; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn { border: 1px solid var(--bone); background: transparent; padding: 13px 22px; border-radius: 2px; font-family: var(--display); font-weight: 800; font-size: 18px; letter-spacing: .08em; text-transform: uppercase; text-decoration: none; color: var(--bone); display: inline-block; }
+.btn.solid { background: var(--bone); color: var(--ink); }
+.btn.plum { background: var(--plum); border-color: var(--plum); color: var(--plum-ink); }
+.hero-photo { position: relative; min-width: 0; }
+.hero-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
+.hero-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--ink) 0%, transparent 28%); }
+.hero-tag { position: absolute; right: 16px; bottom: 16px; z-index: 1; background: var(--ink); border: 1px solid var(--line); padding: 10px 12px; display: grid; gap: 2px; }
+.hero-tag strong { font-family: var(--display); font-size: 18px; letter-spacing: .04em; text-transform: uppercase; }
+@media (max-width: 820px) {
+  .hero-grid { grid-template-columns: 1fr; min-height: 0; }
+  .hero-photo { aspect-ratio: 4/5; order: -1; max-width: 100%; }
+  .hero-photo::after { background: linear-gradient(0deg, var(--ink) 0%, transparent 35%); }
+  .hero-copy { padding-block: 8px 40px; }
+}
+
+/* ticker */
+.ticker { border-bottom: 1px solid var(--line); overflow: hidden; white-space: nowrap; }
+.ticker div { display: inline-block; padding-block: 12px; font-family: var(--display); font-style: italic; font-weight: 800; font-size: 22px; letter-spacing: .04em; text-transform: uppercase; animation: run 32s linear infinite; }
+.ticker i { color: var(--plum); font-style: normal; margin: 0 18px; }
+@keyframes run { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .ticker div { animation: none; } }
+
+/* catálogo */
+section { padding-block: 72px; }
+.sec-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+h2 { font-family: var(--display); font-weight: 900; font-style: italic; text-transform: uppercase; font-size: clamp(40px, 6vw, 68px); line-height: .9; margin: 0; text-wrap: balance; }
+.filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.filters button { background: transparent; border: 1px solid var(--line); border-radius: 2px; padding: 7px 14px; font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--dust); }
+.filters button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border-color: var(--bone); }
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px 18px; }
+@media (max-width: 1000px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 720px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 12px; } }
+.card { display: grid; gap: 10px; background: none; border: 0; padding: 0; text-align: left; }
+.card .ph { position: relative; aspect-ratio: 4/5; overflow: hidden; background: var(--iron); max-width: 100%; }
+.card .ph img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+.card:hover .ph img { transform: scale(1.04); }
+.card .sku { position: absolute; left: 8px; top: 8px; background: var(--ink); padding: 3px 6px; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: var(--dust); }
+.card .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.card h3 { margin: 0; font-family: var(--display); font-weight: 800; text-transform: uppercase; font-size: 21px; letter-spacing: .02em; line-height: 1.05; min-width: 0; }
+.price { font-family: var(--mono); font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.card .meta { color: var(--dust); font-size: 13px; }
+
+/* manifiesto */
+.manifest { background: var(--bone); color: var(--ink); }
+.manifest .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+.manifest img.dog { width: min(320px, 70%); filter: invert(1); }
+.manifest blockquote { margin: 0; font-family: var(--display); font-weight: 800; font-style: italic; text-transform: uppercase; font-size: clamp(34px, 5vw, 58px); line-height: .95; text-wrap: balance; }
+.manifest p { font-size: 17px; max-width: 46ch; margin: 18px 0 0; }
+.manifest .label { color: #55504a; }
+@media (max-width: 760px) { .manifest .wrap { grid-template-columns: 1fr; } }
+
+/* lookbook */
+.look { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+.look figure { margin: 0; position: relative; overflow: hidden; background: var(--iron); min-width: 0; }
+.look img { width: 100%; height: 100%; object-fit: cover; aspect-ratio: 4/5; }
+.look figure:first-child img { aspect-ratio: auto; }
+.look figcaption { position: absolute; left: 10px; bottom: 10px; background: var(--ink); padding: 4px 8px; }
+@media (max-width: 720px) { .look { grid-template-columns: 1fr 1fr; } .look figure:first-child { grid-column: 1 / -1; } .look figure:first-child img { aspect-ratio: 4/3; } }
+
+/* cómo comprar */
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--line); }
+.steps li { list-style: none; padding: 22px 22px 22px 0; border-right: 1px solid var(--line); display: grid; gap: 8px; min-width: 0; }
+.steps li + li { padding-left: 22px; }
+.steps li:last-child { border-right: 0; }
+.steps .n { font-family: var(--display); font-style: italic; font-weight: 900; font-size: 54px; line-height: 1; color: var(--plum); }
+.steps h3 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 24px; text-transform: uppercase; }
+.steps p { margin: 0; color: var(--dust); }
+.steps ol { padding: 0; margin: 0; display: contents; }
+@media (max-width: 720px) { .steps { grid-template-columns: 1fr; } .steps li, .steps li + li { padding: 18px 0; border-right: 0; border-bottom: 1px solid var(--line); } }
+
+footer { border-top: 1px solid var(--line); padding-block: 36px; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
+footer img { height: 34px; width: auto; }
+
+/* panel de producto y carrito */
+.scrim { position: fixed; inset: 0; background: rgb(0 0 0 / .6); z-index: 20; }
+.sheet { position: fixed; z-index: 21; top: 0; right: 0; bottom: 0; width: min(460px, 100%); background: var(--ink); border-left: 1px solid var(--line); display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); padding-right: env(safe-area-inset-right, 0px); }
+.sheet-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.sheet-head h2 { font-size: 34px; }
+.x { background: none; border: 1px solid var(--line); width: 38px; height: 38px; border-radius: 2px; font-size: 20px; }
+.sheet-body { overflow-y: auto; padding: 20px; display: grid; gap: 18px; align-content: start; flex: 1; }
+.sheet-foot { border-top: 1px solid var(--line); padding: 16px 20px; display: grid; gap: 12px; }
+.pd-img { aspect-ratio: 4/5; object-fit: cover; width: 100%; background: var(--iron); }
+.sizes { display: flex; gap: 6px; flex-wrap: wrap; }
+.sizes button { min-width: 48px; padding: 9px 10px; border: 1px solid var(--line); background: transparent; border-radius: 2px; font-family: var(--mono); font-size: 13px; }
+.sizes button[aria-pressed="true"] { background: var(--bone); color: var(--ink); border-color: var(--bone); }
+.hint { color: var(--dust); font-size: 13px; margin: 0; }
+.line { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.line img { width: 64px; height: 80px; object-fit: cover; }
+.line h4 { margin: 0; font-family: var(--display); font-weight: 800; text-transform: uppercase; font-size: 18px; line-height: 1.05; }
+.qty { display: inline-flex; align-items: center; border: 1px solid var(--line); margin-top: 6px; }
+.qty button { background: none; border: 0; width: 30px; height: 28px; }
+.qty span { font-family: var(--mono); min-width: 22px; text-align: center; font-size: 13px; }
+.total { display: flex; justify-content: space-between; font-family: var(--display); font-weight: 800; font-size: 24px; text-transform: uppercase; }
+.total .price { font-size: 20px; }
+.field { display: grid; gap: 6px; }
+.field input, .field textarea { background: var(--iron); border: 1px solid var(--line); color: var(--bone); border-radius: 2px; padding: 10px 12px; font: inherit; }
+.pay { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pay label { border: 1px solid var(--line); padding: 10px; border-radius: 2px; display: flex; gap: 8px; align-items: center; font-size: 14px; cursor: pointer; }
+.pay input { accent-color: var(--plum); }
+.copybox { background: var(--iron); border: 1px dashed var(--line); padding: 12px; display: grid; gap: 8px; }
+.copybox code { font-family: var(--mono); font-size: 13px; word-break: break-all; user-select: all; }
+.copybox button { justify-self: start; background: none; border: 1px solid var(--line); padding: 5px 10px; font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+pre.order { white-space: pre-wrap; font-family: var(--mono); font-size: 12px; background: var(--iron); padding: 12px; margin: 0; user-select: all; }
+.empty { text-align: center; color: var(--dust); padding: 40px 0; display: grid; gap: 14px; justify-items: center; }
+.empty img { width: 90px; opacity: .5; }
+/* modo app: barra inferior en teléfono */
+.tabbar { display: none; }
+@media (max-width: 640px) {
+  .tabbar { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 15;
+    background: var(--ink); border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  .tabbar a, .tabbar button { background: none; border: 0; text-decoration: none; color: var(--dust); display: grid; justify-items: center; gap: 3px; padding: 9px 0 8px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; position: relative; }
+  .tabbar svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .tabbar .on { color: var(--bone); }
+  .tabbar .badge { position: absolute; top: 4px; left: calc(50% + 6px); background: var(--plum); color: var(--plum-ink); min-width: 17px; height: 17px; border-radius: 9px; font-size: 10px; display: grid; place-items: center; letter-spacing: 0; }
+  footer { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  header .cart-btn { display: none; }
+  .toast { bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
+  .sheet { bottom: 0; }
+}
+.install-card { border: 1px solid var(--line); padding: 16px; display: grid; gap: 10px; }
+.install-card ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--bone); color: var(--ink); padding: 10px 16px; font-family: var(--display); font-weight: 800; text-transform: uppercase; letter-spacing: .05em; z-index: 30; }
+</style>
+<style>body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+
+<header>
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="REPX inicio"><img src="img/logo-repx.png" alt="REPX"></a>
+    <nav aria-label="Secciones">
+      <a href="#tienda">Tienda</a>
+      <a href="#manifiesto">Relentless</a>
+      <a href="#comprar">Cómo comprar</a>
+    </nav>
+    <button class="cart-btn" id="openCart" type="button">Carrito <b id="cartCount">0</b></button>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero" style="padding-block:0">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <span class="label">Colección Core · Built different</span>
+        <h1>No excuses. <span>Just reps.</span></h1>
+        <p>Ropa de entrenamiento para los que vuelven al gym aunque no tengan ganas. Telas que aguantan el sudor, cortes que acompañan el movimiento.</p>
+        <div class="hero-actions">
+          <a class="btn solid" href="#tienda">Ver colección</a>
+          <a class="btn" href="#comprar">Pago en USDT</a>
+        </div>
+      </div>
+      <div class="hero-photo">
+        <img src="img/overhead.webp" alt="Atleta levantando una pesa rusa con camiseta REPX color bone">
+        <div class="hero-tag"><span class="label">Lleva puesto</span><strong>Camiseta Core Bone</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="ticker" aria-hidden="true"><div id="ticker"></div></div>
+
+  <section id="tienda">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><span class="label">Tienda</span><h2>Colección Core</h2></div>
+        <div class="filters" role="group" aria-label="Filtrar">
+          <button type="button" data-f="todo" aria-pressed="true">Todo</button>
+          <button type="button" data-f="hombre" aria-pressed="false">Hombre</button>
+          <button type="button" data-f="mujer" aria-pressed="false">Mujer</button>
+        </div>
+      </div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </section>
+
+  <section class="manifest" id="manifiesto">
+    <div class="wrap">
+      <img class="dog" src="img/bulldog.png" alt="Bulldog de REPX">
+      <div>
+        <span class="label">In honor of all the relentless</span>
+        <blockquote>Una rep más. Después otra.</blockquote>
+        <p>Buscamos comodidad, desarrollamos fuerza y crecemos repetición tras repetición. El bulldog es eso: terco, constante y difícil de mover.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head"><div><span class="label">En el piso</span><h2>Probado entrenando</h2></div></div>
+      <div class="look">
+        <figure><img src="img/hyrox.webp" alt="Atleta corriendo en competencia con tank REPX" loading="lazy"><figcaption class="label">Tank Relentless</figcaption></figure>
+        <figure><img src="img/wallball.webp" alt="Atleta con balón medicinal" loading="lazy"><figcaption class="label">Wall balls</figcaption></figure>
+        <figure><img src="img/swing.webp" alt="Atleta haciendo swing con pesa rusa" loading="lazy"><figcaption class="label">Swings</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="comprar" style="padding-top:0">
+    <div class="wrap">
+      <div class="sec-head"><div><span class="label">Sin complicaciones</span><h2>Cómo comprar</h2></div></div>
+      <ol class="steps">
+        <li><span class="n">1</span><h3>Arma tu pedido</h3><p>Elige prenda y talla, y agrégala al carrito.</p></li>
+        <li><span class="n">2</span><h3>Paga en USDT</h3><p>Por Binance Pay o a nuestra dirección USDT (TRC20). También aceptamos pago móvil.</p></li>
+        <li><span class="n">3</span><h3>Envía y recibe</h3><p>Mandas el pedido por WhatsApp con tu comprobante y despachamos en 24 a 48 horas.</p></li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <img src="img/r-mark.png" alt="REPX">
+    <span class="label">REPX · Relentless · Venezuela</span>
+  </div>
+</footer>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<aside class="sheet" id="product" hidden aria-labelledby="pdTitle">
+  <div class="sheet-head"><span class="label" id="pdSku"></span><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
+  <div class="sheet-body">
+    <img class="pd-img" id="pdImg" alt="">
+    <div><h2 id="pdTitle"></h2><p class="hint" id="pdDesc"></p></div>
+    <div class="field"><span class="label">Talla</span><div class="sizes" id="pdSizes"></div></div>
+    <p class="hint">Si estás entre dos tallas, escoge la mayor para un calce más suelto.</p>
+  </div>
+  <div class="sheet-foot">
+    <div class="total"><span>Precio</span><span class="price" id="pdPrice"></span></div>
+    <button class="btn solid" type="button" id="pdAdd">Agregar al carrito</button>
+  </div>
+</aside>
+
+<aside class="sheet" id="cart" hidden aria-labelledby="cartTitle">
+  <div class="sheet-head"><h2 id="cartTitle">Tu pedido</h2><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
+  <div class="sheet-body" id="cartBody"></div>
+  <div class="sheet-foot" id="cartFoot"></div>
+</aside>
+
+<nav class="tabbar" aria-label="Navegación de la app">
+  <a href="#top" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</a>
+  <a href="#tienda"><svg viewBox="0 0 24 24"><path d="M8 3l-5 3 2 5 2-1v11h10V10l2 1 2-5-5-3c0 2-2 3-4 3S8 5 8 3z"/></svg>Tienda</a>
+  <button type="button" id="tabCart"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1 13H6z M9 8V6a3 3 0 0 1 6 0v2"/></svg>Carrito<span class="badge" id="tabCount" hidden>0</span></button>
+  <button type="button" id="tabInstall"><svg viewBox="0 0 24 24"><path d="M12 3v12m-5-5l5 5 5-5M5 21h14"/></svg>App</button>
+</nav>
+
+<aside class="sheet" id="install" hidden aria-labelledby="instTitle">
+  <div class="sheet-head"><h2 id="instTitle">App REPX</h2><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
+  <div class="sheet-body">
+    <img src="img/icon-192.png" alt="" style="width:88px;border-radius:20px">
+    <p class="hint" style="font-size:15px;color:var(--bone)">Instala REPX en tu teléfono y abre la tienda desde la pantalla de inicio, a pantalla completa.</p>
+    <button class="btn solid" type="button" id="doInstall" hidden>Instalar app</button>
+    <div class="install-card" id="iosSteps">
+      <span class="label">En iPhone (Safari)</span>
+      <ol><li>Toca el botón Compartir, el cuadro con la flecha hacia arriba.</li><li>Elige "Agregar a pantalla de inicio".</li><li>Toca "Agregar".</li></ol>
+    </div>
+    <div class="install-card">
+      <span class="label">En Android (Chrome)</span>
+      <ol><li>Toca el menú de los tres puntos.</li><li>Elige "Instalar app" o "Agregar a pantalla principal".</li></ol>
+    </div>
+  </div>
+</aside>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ======= CONFIGURA AQUÍ ======= */
+const TIENDA = {
+  whatsapp: "584120000000",            // tu número con código de país, sin + ni espacios
+  binancePayId: "000000000",           // tu Binance Pay ID
+  usdtTrc20: "TXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", // tu dirección USDT red TRC20
+};
+const PRODUCTOS = [
+  { id: "TNK-01", nombre: "Tank Relentless", genero: "hombre", precio: 22, img: "hyrox", desc: "Tank de malla ligera en gris claro. Sisa amplia para moverte sin roce.", tallas: ["S","M","L","XL"] },
+  { id: "TEE-02", nombre: "Camiseta Core Bone", genero: "hombre", precio: 25, img: "overhead", desc: "Algodón peinado con elastano, corte entallado. Logo REPX al pecho.", tallas: ["S","M","L","XL","XXL"] },
+  { id: "TEE-03", nombre: "Camiseta Bulldog Negra", genero: "hombre", precio: 25, img: "tee-negra", desc: "Negra con el bulldog bordado. Para el gym y para la calle.", tallas: ["S","M","L","XL","XXL"] },
+  { id: "SHT-04", nombre: "Short Training", genero: "hombre", precio: 24, img: "swing", desc: "Short negro de 7 pulgadas con cordón y bolsillos laterales.", tallas: ["S","M","L","XL"] },
+  { id: "SET-05", nombre: "Set Core Crema", genero: "mujer", precio: 45, img: "set-core-crema", desc: "Crop tee y short de tiro alto con cintura cruzada. Se vende como set.", tallas: ["XS","S","M","L"] },
+  { id: "SET-06", nombre: "Set Court Ciruela", genero: "mujer", precio: 52, img: "set-court-ciruela", desc: "Polo con medio cierre y falda plisada con short interno.", tallas: ["XS","S","M","L"] },
+  { id: "DRS-07", nombre: "Vestido Court Butter", genero: "mujer", precio: 40, img: "vestido-court", desc: "Vestido de tirantes con short interno. Para pista, pádel o paseo.", tallas: ["XS","S","M","L"] },
+  { id: "TEE-08", nombre: "Camiseta Core Arena", genero: "hombre", precio: 25, img: "tee-bone-2", desc: "El mismo corte Core en tono arena, combinable con el short negro.", tallas: ["M","L","XL","XXL"] },
+];
+/* ============================== */
+
+const $ = s => document.querySelector(s);
+const usd = n => "$" + n.toFixed(2) + " USDT";
+let cart = [];
+try { cart = JSON.parse(localStorage.getItem("repx-cart") || "[]"); } catch (e) { cart = []; }
+const save = () => { try { localStorage.setItem("repx-cart", JSON.stringify(cart)); } catch (e) {} };
+
+$("#ticker").innerHTML = Array(2).fill("No excuses<i>✕</i>Just reps<i>✕</i>Relentless<i>✕</i>Built different<i>✕</i>Pago en USDT<i>✕</i>").join("");
+
+function renderGrid(f) {
+  $("#grid").innerHTML = PRODUCTOS.filter(p => f === "todo" || p.genero === f).map(p => `
+    <button class="card" type="button" data-id="${p.id}">
+      <div class="ph"><img src="img/${p.img}.webp" alt="${p.nombre}" loading="lazy"><span class="sku">${p.id}</span></div>
+      <div class="row"><h3>${p.nombre}</h3><span class="price">$${p.precio}</span></div>
+      <span class="meta">${p.tallas[0]}–${p.tallas[p.tallas.length - 1]} · ${p.genero === "mujer" ? "Mujer" : "Hombre"}</span>
+    </button>`).join("");
+}
+renderGrid("todo");
+document.querySelectorAll(".filters button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".filters button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  renderGrid(b.dataset.f);
+}));
+
+let actual = null, talla = null;
+function open(id) { $("#scrim").hidden = false; $(id).hidden = false; }
+function closeAll() { $("#scrim").hidden = true; $("#product").hidden = true; $("#cart").hidden = true; $("#install").hidden = true; }
+document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", closeAll));
+$("#scrim").addEventListener("click", closeAll);
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeAll(); });
+
+$("#grid").addEventListener("click", e => {
+  const c = e.target.closest(".card"); if (!c) return;
+  actual = PRODUCTOS.find(p => p.id === c.dataset.id); talla = null;
+  $("#pdSku").textContent = actual.id;
+  $("#pdImg").src = `img/${actual.img}.webp`; $("#pdImg").alt = actual.nombre;
+  $("#pdTitle").textContent = actual.nombre; $("#pdDesc").textContent = actual.desc;
+  $("#pdPrice").textContent = usd(actual.precio);
+  $("#pdSizes").innerHTML = actual.tallas.map(t => `<button type="button" aria-pressed="false">${t}</button>`).join("");
+  $("#pdAdd").textContent = "Elige una talla";
+  open("#product");
+});
+$("#pdSizes").addEventListener("click", e => {
+  if (e.target.tagName !== "BUTTON") return;
+  talla = e.target.textContent;
+  $("#pdSizes").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b === e.target));
+  $("#pdAdd").textContent = "Agregar al carrito";
+});
+$("#pdAdd").addEventListener("click", () => {
+  if (!talla) { toast("Elige una talla primero"); return; }
+  const ex = cart.find(l => l.id === actual.id && l.talla === talla);
+  ex ? ex.qty++ : cart.push({ id: actual.id, talla, qty: 1 });
+  save(); count(); closeAll(); toast(`${actual.nombre} (${talla}) agregado`);
+});
+
+function count() {
+  const n = cart.reduce((a, l) => a + l.qty, 0);
+  $("#cartCount").textContent = n; $("#tabCount").textContent = n; $("#tabCount").hidden = n === 0;
+}
+function total() { return cart.reduce((a, l) => a + l.qty * PRODUCTOS.find(p => p.id === l.id).precio, 0); }
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(t._h); t._h = setTimeout(() => t.hidden = true, 2200); }
+
+function orderText() {
+  const nombre = ($("#cName")?.value || "").trim();
+  const nota = ($("#cNote")?.value || "").trim();
+  const pago = document.querySelector('input[name="pago"]:checked')?.value || "Binance Pay";
+  return ["Hola REPX, quiero hacer este pedido:", ...cart.map(l => {
+    const p = PRODUCTOS.find(x => x.id === l.id);
+    return `• ${l.qty} × ${p.nombre} (${l.talla}) – $${(p.precio * l.qty).toFixed(2)}`;
+  }), `Total: $${total().toFixed(2)} USDT`, `Pago: ${pago}`, nombre && `Nombre: ${nombre}`, nota && `Entrega: ${nota}`].filter(Boolean).join("\n");
+}
+
+function renderCart() {
+  const body = $("#cartBody"), foot = $("#cartFoot");
+  if (!cart.length) {
+    body.innerHTML = `<div class="empty"><img src="img/bulldog.png" alt=""><p>Tu carrito está vacío. Escoge algo de la Colección Core para empezar.</p><button class="btn" type="button" data-close>Ver colección</button></div>`;
+    body.querySelector("[data-close]").addEventListener("click", closeAll);
+    foot.hidden = true; return;
+  }
+  foot.hidden = false;
+  body.innerHTML = cart.map((l, i) => {
+    const p = PRODUCTOS.find(x => x.id === l.id);
+    return `<div class="line"><img src="img/${p.img}.webp" alt=""><div><h4>${p.nombre}</h4><span class="label">Talla ${l.talla}</span><br>
+      <span class="qty"><button type="button" data-i="${i}" data-d="-1" aria-label="Quitar uno">−</button><span>${l.qty}</span><button type="button" data-i="${i}" data-d="1" aria-label="Agregar uno">+</button></span></div>
+      <span class="price">$${(p.precio * l.qty).toFixed(2)}</span></div>`;
+  }).join("") + `
+    <div class="field"><label class="label" for="cName">Tu nombre</label><input id="cName" autocomplete="name" placeholder="Nombre y apellido"></div>
+    <div class="field"><label class="label" for="cNote">Ciudad o dirección de entrega</label><input id="cNote" placeholder="Ej. Caracas, Los Palos Grandes"></div>
+    <div class="field"><span class="label">Método de pago</span>
+      <div class="pay">
+        <label><input type="radio" name="pago" id="pBinance" value="Binance Pay" checked> Binance Pay</label>
+        <label><input type="radio" name="pago" id="pTrc" value="USDT TRC20"> USDT TRC20</label>
+      </div></div>
+    <div class="copybox" id="payBox"></div>`;
+  body.querySelectorAll(".qty button").forEach(b => b.addEventListener("click", () => {
+    const l = cart[b.dataset.i]; l.qty += +b.dataset.d;
+    if (l.qty <= 0) cart.splice(b.dataset.i, 1);
+    save(); count(); renderCart();
+  }));
+  body.querySelectorAll('input[name="pago"]').forEach(r => r.addEventListener("change", payBox));
+  payBox();
+  foot.innerHTML = `<div class="total"><span>Total</span><span class="price">${usd(total())}</span></div>
+    <a class="btn plum" id="waLink" target="_blank" rel="noopener" style="text-align:center">Enviar pedido por WhatsApp</a>
+    <p class="hint">Si WhatsApp no abre, copia el pedido y envíalo al +${TIENDA.whatsapp}.</p>
+    <button class="btn" type="button" id="copyOrder">Copiar pedido</button>`;
+  const wa = () => $("#waLink").href = `https://wa.me/${TIENDA.whatsapp}?text=${encodeURIComponent(orderText())}`;
+  wa(); body.addEventListener("input", wa); body.addEventListener("change", wa);
+  $("#copyOrder").addEventListener("click", () => copy(orderText(), "Pedido copiado"));
+}
+function payBox() {
+  const trc = $("#pTrc")?.checked;
+  const val = trc ? TIENDA.usdtTrc20 : TIENDA.binancePayId;
+  $("#payBox").innerHTML = `<span class="label">${trc ? "Dirección USDT · red TRC20" : "Binance Pay ID"}</span><code>${val}</code>
+    <span class="hint">Envía exactamente ${usd(total())}${trc ? " por la red TRC20" : ""} y adjunta el comprobante en WhatsApp.</span>
+    <button type="button" id="copyPay">Copiar</button>`;
+  $("#copyPay").addEventListener("click", () => copy(val, "Copiado"));
+}
+function copy(text, ok) {
+  try {
+    navigator.clipboard.writeText(text).then(() => toast(ok)).catch(() => toast("Mantén presionado el texto para copiarlo"));
+  } catch (e) { toast("Mantén presionado el texto para copiarlo"); }
+}
+$("#openCart").addEventListener("click", () => { renderCart(); open("#cart"); });
+$("#tabCart").addEventListener("click", () => { renderCart(); open("#cart"); });
+
+/* ---- modo app ---- */
+let installEvt = null;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+$("#iosSteps").hidden = !isIOS && !!installEvt;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; $("#doInstall").hidden = false; });
+$("#doInstall").addEventListener("click", async () => {
+  if (!installEvt) return;
+  installEvt.prompt();
+  try { const r = await installEvt.userChoice; if (r.outcome === "accepted") { closeAll(); toast("App instalada"); } } catch (e) {}
+  installEvt = null; $("#doInstall").hidden = true;
+});
+$("#tabInstall").addEventListener("click", () => open("#install"));
+if (standalone) { $("#tabInstall").hidden = true; document.querySelector(".tabbar").style.gridTemplateColumns = "repeat(3, 1fr)"; }
+/* resalta la pestaña según la sección visible */
+const tabs = [...document.querySelectorAll(".tabbar a")];
+addEventListener("scroll", () => {
+  const enTienda = $("#tienda").getBoundingClientRect().top < innerHeight * 0.5;
+  tabs[0].classList.toggle("on", !enTienda); tabs[1].classList.toggle("on", enTienda);
+}, { passive: true });
+try { if ("serviceWorker" in navigator && location.protocol === "https:" && !location.hostname.endsWith("claude.ai") && !location.hostname.includes("claudeusercontent")) navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) {}
+count();
+</script>
+
+</body>
+</html>

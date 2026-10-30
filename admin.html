@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>REPX Equipo</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0f0f11">
+<link rel="icon" href="img/icon-192.png">
+<link rel="apple-touch-icon" href="img/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,800;1,800;1,900&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .login { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding-block: 40px; }
+  .login form { width: min(380px, 100%); display: grid; gap: 16px; }
+  .login img { height: 34px; width: auto; }
+  .bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--ink); border-bottom: 1px solid var(--line); }
+  .bar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 10px; }
+  .bar img { height: 22px; width: auto; }
+  .who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .tabs button { flex: 1; background: none; border: 0; border-bottom: 2px solid transparent; padding: 12px 6px; font-family: var(--display); font-weight: 800; font-size: 16px; letter-spacing: .04em; text-transform: uppercase; color: var(--dust); white-space: nowrap; }
+  .tabs button[aria-selected="true"] { color: var(--bone); border-bottom-color: var(--plum); }
+  .tabs b { font-family: var(--mono); font-size: 11px; background: var(--plum); color: var(--plum-ink); border-radius: 9px; padding: 1px 6px; margin-left: 4px; vertical-align: 3px; }
+  .pane { padding-block: 22px 60px; display: grid; gap: 16px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+  .list { display: grid; gap: 12px; }
+  .item { border: 1px solid var(--line); background: var(--iron); padding: 14px; display: grid; gap: 10px; min-width: 0; }
+  .item-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .item-head strong { font-family: var(--display); font-size: 22px; text-transform: uppercase; letter-spacing: .02em; }
+  .pill { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border: 1px solid currentColor; }
+  .pill.pendiente { color: var(--warn); } .pill.pagado { color: var(--ok); } .pill.cancelado { color: var(--bad); }
+  .item ul { margin: 0; padding-left: 18px; }
+  .kv { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--dust); font-size: 13px; }
+  .kv b { color: var(--bone); font-weight: 500; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .actions .btn { font-size: 14px; padding: 7px 12px; }
+  .btn.ok { border-color: var(--ok); color: var(--ok); }
+  .btn.bad { border-color: var(--bad); color: var(--bad); }
+  .prod { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 12px; align-items: start; }
+  .prod img, .prod .noimg { width: 72px; height: 90px; object-fit: cover; background: var(--ink); }
+  .stock { display: flex; flex-wrap: wrap; gap: 6px; }
+  .stock span { font-family: var(--mono); font-size: 12px; border: 1px solid var(--line); padding: 3px 7px; }
+  .stock span.cero { color: var(--bad); border-color: var(--bad); }
+  .stock span.bajo { color: var(--warn); border-color: var(--warn); }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .stat { border: 1px solid var(--line); padding: 14px; display: grid; gap: 4px; }
+  .stat b { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--dust); font-weight: 500; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); }
+  tr:last-child td { border-bottom: 0; }
+  h3.sub { margin: 8px 0 0; font-family: var(--display); font-weight: 800; font-size: 24px; text-transform: uppercase; }
+  .talla-row { display: grid; grid-template-columns: 1fr 1fr 40px; gap: 8px; align-items: center; }
+  .talla-row input { background: var(--ink); border: 1px solid var(--line); color: var(--bone); border-radius: 2px; padding: 9px 10px; font: inherit; width: 100%; }
+  .talla-row button { height: 40px; background: none; border: 1px solid var(--line); }
+  .quick { display: flex; flex-wrap: wrap; gap: 6px; }
+  .quick button { background: none; border: 1px dashed var(--line); padding: 5px 10px; font-family: var(--mono); font-size: 12px; }
+  .foto-prev { width: 120px; aspect-ratio: 4/5; object-fit: cover; background: var(--iron); }
+  .check { display: flex; gap: 10px; align-items: center; }
+  .check input { width: 20px; height: 20px; accent-color: var(--plum); }
+  .sheet .sheet-body .field input[type="file"] { padding: 8px; }
+</style>
+</head>
+<body>
+
+<div class="wrap login" id="loginView" hidden>
+  <form id="loginForm" novalidate>
+    <img src="img/logo-repx.png" alt="REPX">
+    <h2>Equipo</h2>
+    <p class="hint">Acceso solo para el equipo de REPX.</p>
+    <div class="field"><label class="label" for="lEmail">Correo</label><input id="lEmail" type="email" autocomplete="username" required></div>
+    <div class="field"><label class="label" for="lPass">Contraseña</label><input id="lPass" type="password" autocomplete="current-password" required></div>
+    <p class="err" id="lErr" hidden></p>
+    <button class="btn solid" type="submit" id="lBtn">Entrar</button>
+    <button class="btn" type="button" id="lReset" style="border-color:var(--line);font-size:14px">Olvidé mi contraseña</button>
+    <a class="hint" href="./">← Volver a la tienda</a>
+  </form>
+</div>
+
+<div id="appView" hidden>
+  <div class="bar"><div class="wrap">
+    <a href="./" aria-label="Ver tienda"><img src="img/logo-repx.png" alt="REPX"></a>
+    <div class="who"><span class="label" id="whoEmail"></span><button class="btn sm" type="button" id="logout" style="border-color:var(--line)">Salir</button></div>
+  </div></div>
+  <div class="wrap">
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="pedidos">Pedidos<b id="pendCount" hidden>0</b></button>
+      <button role="tab" aria-selected="false" data-tab="productos">Productos</button>
+      <button role="tab" aria-selected="false" data-tab="ventas">Ventas</button>
+    </div>
+
+    <div class="pane" id="tab-pedidos">
+      <div class="toolbar">
+        <div class="chips" id="pedFiltro">
+          <button type="button" data-f="pendiente" aria-pressed="true">Pendientes</button>
+          <button type="button" data-f="pagado" aria-pressed="false">Pagados</button>
+          <button type="button" data-f="cancelado" aria-pressed="false">Cancelados</button>
+          <button type="button" data-f="todos" aria-pressed="false">Todos</button>
+        </div>
+        <button class="btn sm solid" type="button" id="nuevaVenta">+ Venta manual</button>
+      </div>
+      <div class="list" id="pedidos"><p class="hint">Cargando pedidos…</p></div>
+    </div>
+
+    <div class="pane" id="tab-productos" hidden>
+      <div class="toolbar">
+        <div class="kv" id="invResumen"></div>
+        <button class="btn sm solid" type="button" id="nuevoProd">+ Nuevo producto</button>
+      </div>
+      <div class="list" id="productos"><p class="hint">Cargando productos…</p></div>
+    </div>
+
+    <div class="pane" id="tab-ventas" hidden>
+      <div class="toolbar">
+        <div class="field" style="max-width:220px"><label class="label" for="mes">Mes</label><input id="mes" type="month"></div>
+      </div>
+      <div class="stats" id="stats"></div>
+      <h3 class="sub">Por producto</h3>
+      <div class="table-wrap"><table id="tProd"></table></div>
+      <h3 class="sub">Por método de pago</h3>
+      <div class="table-wrap"><table id="tPago"></table></div>
+      <h3 class="sub">Meses anteriores</h3>
+      <div class="table-wrap"><table id="tMeses"></table></div>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<aside class="sheet" id="prodSheet" hidden aria-labelledby="psTitle">
+  <div class="sheet-head"><h2 id="psTitle">Producto</h2><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
+  <form class="sheet-body" id="prodForm" novalidate>
+    <div class="field"><span class="label">Foto</span>
+      <img class="foto-prev" id="pFotoPrev" alt="" hidden>
+      <input id="pFoto" type="file" accept="image/*">
+      <p class="hint">Se comprime sola para que cargue rápido.</p></div>
+    <div class="field"><label class="label" for="pNombre">Nombre</label><input id="pNombre" required placeholder="Ej. Camiseta Core Bone"></div>
+    <div class="field"><label class="label" for="pPrecio">Precio ($)</label><input id="pPrecio" type="number" inputmode="decimal" min="0" step="0.5" required></div>
+    <div class="field"><label class="label" for="pCat">Categoría</label>
+      <select id="pCat"><option value="hombre">Hombre</option><option value="mujer">Mujer</option><option value="unisex">Unisex</option></select></div>
+    <div class="field"><label class="label" for="pDesc">Descripción (opcional)</label><textarea id="pDesc" rows="3" placeholder="Tela, corte, para qué sirve"></textarea></div>
+    <div class="field"><span class="label">Tallas y unidades disponibles</span>
+      <div id="pTallas" style="display:grid;gap:8px"></div>
+      <div class="quick" id="pQuick"></div></div>
+    <label class="check"><input type="checkbox" id="pAgotado"> Marcar como agotado (se ve en la tienda pero no se puede pedir)</label>
+    <p class="err" id="pErr" hidden></p>
+  </form>
+  <div class="sheet-foot">
+    <button class="btn solid" type="button" id="pGuardar">Guardar producto</button>
+    <button class="btn bad" type="button" id="pBorrar" hidden>Eliminar producto</button>
+  </div>
+</aside>
+
+<aside class="sheet" id="ventaSheet" hidden aria-labelledby="vsTitle">
+  <div class="sheet-head"><h2 id="vsTitle">Venta manual</h2><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
+  <form class="sheet-body" id="ventaForm" novalidate>
+    <p class="hint">Para ventas fuera de la página (en persona, por Instagram). Se registra como pagada y descuenta del inventario.</p>
+    <div class="field"><label class="label" for="vProd">Producto</label><select id="vProd"></select></div>
+    <div class="field"><label class="label" for="vTalla">Talla</label><select id="vTalla"></select></div>
+    <div class="field"><label class="label" for="vQty">Cantidad</label><input id="vQty" type="number" min="1" value="1" inputmode="numeric"></div>
+    <div class="field"><label class="label" for="vPrecio">Precio por unidad ($)</label><input id="vPrecio" type="number" min="0" step="0.5" inputmode="decimal"></div>
+    <div class="field"><label class="label" for="vPago">Método de pago</label><select id="vPago"></select></div>
+    <div class="field"><label class="label" for="vCliente">Cliente (opcional)</label><input id="vCliente" placeholder="Nombre"></div>
+    <p class="err" id="vErr" hidden></p>
+  </form>
+  <div class="sheet-foot"><button class="btn solid" type="button" id="vGuardar">Registrar venta</button></div>
+</aside>
+
+<div class="toast" id="toast" hidden></div>
+<script type="module" src="admin.js"></script>
+</body>
+</html>

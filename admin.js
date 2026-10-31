@@ -344,7 +344,7 @@ $("#pGuardar").addEventListener("click", async () => {
     if (fotosCambiadas || !editando) data.foto = await comprimir(fotos[0], 640, 90000);
     const ref = editando ? doc(db, "productos", editando.id) : doc(collection(db, "productos"));
     if (editando) await updateDoc(ref, data);
-    else await setDoc(ref, { ...data, creado: serverTimestamp() });
+    else { await setDoc(ref, { ...data, creado: serverTimestamp() }); editando = { id: ref.id, ...data }; $("#psTitle").textContent = "Editar producto"; $("#pBorrar").hidden = false; }
     if (fotosCambiadas || !editando) {
       try { await setDoc(doc(db, "galerias", ref.id), { fotos }); }
       catch (e) {

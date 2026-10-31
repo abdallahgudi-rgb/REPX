@@ -1,0 +1,9 @@
+{
+  // Publicación en Cloudflare: la tienda es una página estática, se sirve tal cual
+  "name": "repx",
+  "compatibility_date": "2025-06-01",
+  "assets": {
+    "directory": "./",
+    "not_found_handling": "404-page"
+  }
+}

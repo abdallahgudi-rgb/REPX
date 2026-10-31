@@ -30,7 +30,10 @@ $("#loginForm").addEventListener("submit", async e => {
   catch (err) {
     mostrarError(/invalid-credential|wrong-password|user-not-found|invalid-email/.test(err.code || "")
       ? "Correo o contraseña incorrectos." : err.code === "auth/too-many-requests"
-      ? "Demasiados intentos. Espera unos minutos y vuelve a probar." : "No se pudo entrar. Revisa tu conexión.");
+      ? "Demasiados intentos. Espera unos minutos y vuelve a probar."
+      : /unauthorized-domain|requests-from-referer|api-key/.test(err.code || err.message || "")
+      ? "Este link no está autorizado en Firebase. Agrégalo en Dominios autorizados. (" + (err.code || "") + ")"
+      : "No se pudo entrar. (" + (err.code || err.message || "error") + ")");
   }
   $("#lBtn").disabled = false; $("#lBtn").textContent = "Entrar";
 });

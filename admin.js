@@ -16,6 +16,7 @@ let unsubs = [];
 
 /* ---------------- acceso ---------------- */
 onAuthStateChanged(auth, user => {
+  window.__adminOk = true;
   unsubs.forEach(u => u()); unsubs = [];
   const ok = user && ADMINS.includes((user.email || "").toLowerCase());
   if (user && !ok) { signOut(auth); mostrarError("Este correo no tiene acceso al panel."); }

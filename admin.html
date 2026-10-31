@@ -84,7 +84,7 @@
 </head>
 <body>
 
-<div class="wrap login" id="loginView" hidden>
+<div class="wrap login" id="loginView">
   <form id="loginForm" novalidate>
     <img src="img/logo-repx.png" alt="REPX">
     <h2>Equipo</h2>
@@ -189,6 +189,12 @@
 </aside>
 
 <div class="toast" id="toast" hidden></div>
+<p class="err wrap" id="bootErr" hidden style="padding-block:12px"></p>
+<script>
+  window.addEventListener("error", e => { const b = document.getElementById("bootErr"); b.hidden = false; b.textContent = "Error: " + (e.message || "no cargó una parte del panel") + " " + (e.filename ? "(" + e.filename.split("/").pop() + ")" : ""); }, true);
+  window.addEventListener("unhandledrejection", e => { const b = document.getElementById("bootErr"); b.hidden = false; b.textContent = "Error: " + (e.reason?.code || e.reason?.message || e.reason); });
+  setTimeout(() => { if (!window.__adminOk) { const b = document.getElementById("bootErr"); if (b.hidden) { b.hidden = false; b.textContent = "El panel está tardando en conectar con Firebase. Revisa tu conexión y recarga la página."; } } }, 9000);
+</script>
 <script type="module" src="admin.js"></script>
 </body>
 </html>

@@ -21,6 +21,7 @@ async function cargar() {
     // limpia del carrito lo que ya no existe
     cart = cart.filter(l => productos.some(p => p.id === l.id));
     save(); count(); render();
+    if (location.hash === "#carrito") { renderCart(); open("#cart"); history.replaceState(null, "", location.pathname); }
   } catch (e) {
     $("#grid").innerHTML = `<div class="empty"><p>No pudimos cargar los productos. Revisa tu conexión y recarga la página.</p></div>`;
   }
@@ -34,11 +35,11 @@ function render() {
   $("#grid").innerHTML = lista.map(p => {
     const out = estaAgotado(p);
     const tallas = (p.tallas || []).filter(t => t.stock > 0).map(t => t.t);
-    return `<button class="card${out ? " out" : ""}" type="button" data-id="${p.id}">
+    return `<a class="card${out ? " out" : ""}" href="producto.html?id=${encodeURIComponent(p.id)}">
       <div class="ph">${p.foto ? `<img src="${p.foto}" alt="${esc(p.nombre)}" loading="lazy">` : ""}${out ? `<span class="tag out">Agotado</span>` : ""}</div>
       <div class="row"><h3>${esc(p.nombre)}</h3><span class="price">${dinero(p.precio)}</span></div>
       <span class="meta">${out ? "Sin disponibilidad" : "Tallas " + esc(tallas.join(" · "))}</span>
-    </button>`;
+    </a>`;
   }).join("");
 }
 document.querySelectorAll(".chips button").forEach(b => b.addEventListener("click", () => {
@@ -242,3 +243,4 @@ try { if ("serviceWorker" in navigator && location.protocol === "https:") naviga
 
 count();
 cargar();
+if (location.hash === "#app") { abrirInstalar(); history.replaceState(null, "", location.pathname); }

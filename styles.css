@@ -232,3 +232,5 @@ footer a { color: var(--dust); }
 }
 @media (prefers-reduced-motion: reduce) { .strip-track { animation: none; } }
 .hero2 .label { color: var(--bone); text-shadow: 0 1px 8px rgb(0 0 0 / .9); }
+
+a.card { color: inherit; text-decoration: none; }

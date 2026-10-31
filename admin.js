@@ -1,7 +1,7 @@
 import { db, auth, ADMINS, METODOS_PAGO, dinero, codigo, telWa, esc, stockTotal } from "./firebase.js";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  collection, doc, onSnapshot, query, orderBy, limit, where, addDoc, setDoc, updateDoc, deleteDoc,
+  collection, doc, onSnapshot, query, orderBy, limit, where, addDoc, setDoc, updateDoc, deleteDoc, getDoc,
   runTransaction, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -222,7 +222,10 @@ function renderProductos() {
       ${p.foto ? `<img src="${p.foto}" alt="">` : `<div class="noimg"></div>`}
       <div style="display:grid;gap:8px;min-width:0">
         <div class="item-head"><strong>${esc(p.nombre)}</strong><span class="price">${dinero(p.precio)}</span></div>
-        <div class="stock">${(p.tallas || []).map(t => `<span class="${t.stock <= 0 ? "cero" : t.stock <= 2 ? "bajo" : ""}">${esc(t.t)}: ${t.stock}</span>`).join("") || `<span class="cero">Sin tallas</span>`}</div>
+        <div class="inv">${(p.tallas || []).map((t, i) => `<div class="inv-row ${t.stock <= 0 ? "cero" : t.stock <= 2 ? "bajo" : ""}">
+          <b>${esc(t.t)}</b><button type="button" data-a="menos" data-i="${i}" aria-label="Restar una ${esc(t.t)}">−</button>
+          <span>${t.stock}</span><button type="button" data-a="mas" data-i="${i}" aria-label="Sumar una ${esc(t.t)}">+</button>
+          <em>${t.stock <= 0 ? "agotada" : t.stock <= 2 ? "quedan pocas" : "disponibles"}</em></div>`).join("") || `<span class="hint">Sin tallas. Toca Editar para agregarlas.</span>`}</div>
         <div class="kv"><span>${{ hombre: "Hombre", mujer: "Mujer" }[p.categoria] || ""}</span><span>Total: <b>${total}</b></span>${out ? `<span class="pill cancelado">Agotado</span>` : ""}</div>
         <div class="actions"><button class="btn" data-a="editar">Editar</button>
           <button class="btn ${p.agotado ? "ok" : ""}" data-a="agotado">${p.agotado ? "Quitar agotado" : "Marcar agotado"}</button></div>
@@ -233,13 +236,21 @@ $("#productos").addEventListener("click", async e => {
   const b = e.target.closest("button[data-a]"); if (!b) return;
   const p = productos.find(x => x.id === b.closest(".item").dataset.id);
   if (b.dataset.a === "editar") editar(p);
+  if (b.dataset.a === "mas" || b.dataset.a === "menos") {
+    const tallas = (p.tallas || []).map(t => ({ ...t }));
+    const t = tallas[+b.dataset.i];
+    t.stock = Math.max(0, (Number(t.stock) || 0) + (b.dataset.a === "mas" ? 1 : -1));
+    b.disabled = true;
+    try { await updateDoc(doc(db, "productos", p.id), { tallas }); }
+    catch (err) { toast("No se pudo guardar"); b.disabled = false; }
+  }
   if (b.dataset.a === "agotado") {
     try { await updateDoc(doc(db, "productos", p.id), { agotado: !p.agotado }); toast(p.agotado ? "Disponible otra vez" : "Marcado como agotado"); }
     catch (err) { toast("No se pudo guardar"); }
   }
 });
 
-let editando = null, fotoNueva = null;
+let editando = null, fotos = [], fotosCambiadas = false;
 const QUICK = ["XS", "S", "M", "L", "XL", "XXL", "Única"];
 function filaTalla(t = "", s = 0) {
   const div = document.createElement("div");
@@ -255,43 +266,68 @@ $("#pQuick").addEventListener("click", e => {
   if ([...$("#pTallas").querySelectorAll("input:first-child")].some(i => i.value.trim().toUpperCase() === t.toUpperCase())) return;
   filaTalla(t, 0);
 });
-function editar(p) {
-  editando = p || null; fotoNueva = null;
+async function editar(p) {
+  editando = p || null; fotos = p?.foto ? [p.foto] : []; fotosCambiadas = false;
   $("#psTitle").textContent = p ? "Editar producto" : "Nuevo producto";
   $("#pNombre").value = p?.nombre || ""; $("#pPrecio").value = p?.precio ?? "";
   $("#pCat").value = p?.categoria || "hombre"; $("#pDesc").value = p?.descripcion || "";
   $("#pAgotado").checked = !!p?.agotado; $("#pFoto").value = "";
-  $("#pFotoPrev").src = p?.foto || ""; $("#pFotoPrev").hidden = !p?.foto;
+  pintarFotos();
   $("#pTallas").innerHTML = "";
   (p?.tallas?.length ? p.tallas : [{ t: "S", stock: 0 }, { t: "M", stock: 0 }, { t: "L", stock: 0 }]).forEach(t => filaTalla(t.t, t.stock));
   $("#pBorrar").hidden = !p; $("#pBorrar").textContent = "Eliminar producto"; delete $("#pBorrar").dataset.sure;
   $("#pErr").hidden = true;
   abrir("#prodSheet");
+  if (p) {
+    try {
+      const g = await getDoc(doc(db, "galerias", p.id));
+      if (editando === p && !fotosCambiadas && g.exists() && g.data().fotos?.length) { fotos = g.data().fotos; pintarFotos(); }
+    } catch (e) {}
+  }
 }
+function pintarFotos() {
+  $("#pFotos").innerHTML = fotos.map((f, i) => `<figure><img src="${f}" alt="Foto ${i + 1}">
+    <button type="button" class="f-x" data-i="${i}" aria-label="Quitar foto">×</button>
+    <button type="button" class="f-main${i === 0 ? " on" : ""}" data-main="${i}">${i === 0 ? "Principal" : "Hacer principal"}</button></figure>`).join("");
+}
+$("#pFotos").addEventListener("click", e => {
+  const x = e.target.closest(".f-x"), m = e.target.closest(".f-main");
+  if (x) { fotos.splice(+x.dataset.i, 1); fotosCambiadas = true; pintarFotos(); }
+  if (m && +m.dataset.main > 0) { const [f] = fotos.splice(+m.dataset.main, 1); fotos.unshift(f); fotosCambiadas = true; pintarFotos(); }
+});
 $("#nuevoProd").addEventListener("click", () => editar(null));
 
-// Comprime la foto para guardarla dentro de la base de datos (sin pagar almacenamiento)
-async function comprimir(file) {
-  const url = URL.createObjectURL(file);
+// Comprime las fotos para guardarlas en la base de datos (sin pagar almacenamiento)
+async function cargarImagen(src) {
+  const url = src instanceof Blob ? URL.createObjectURL(src) : src;
   const img = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = bad; i.src = url; });
-  URL.revokeObjectURL(url);
-  let lado = 900, q = 0.78, out = "";
-  for (let intento = 0; intento < 8; intento++) {
+  if (src instanceof Blob) URL.revokeObjectURL(url);
+  return img;
+}
+async function comprimir(src, lado = 1000, limite = 140000) {
+  const img = await cargarImagen(src);
+  let q = 0.78, out = "";
+  for (let intento = 0; intento < 10; intento++) {
     const f = Math.min(1, lado / Math.max(img.width, img.height));
     const c = document.createElement("canvas");
     c.width = Math.round(img.width * f); c.height = Math.round(img.height * f);
     c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
     out = c.toDataURL("image/webp", q);
     if (!out.startsWith("data:image/webp")) out = c.toDataURL("image/jpeg", q);
-    if (out.length < 450000) return out;
-    q -= 0.08; if (q < 0.5) { q = 0.7; lado -= 150; }
+    if (out.length < limite) return out;
+    q -= 0.08; if (q < 0.5) { q = 0.72; lado -= 150; }
   }
   return out;
 }
 $("#pFoto").addEventListener("change", async () => {
-  const f = $("#pFoto").files[0]; if (!f) return;
-  try { fotoNueva = await comprimir(f); $("#pFotoPrev").src = fotoNueva; $("#pFotoPrev").hidden = false; }
-  catch (e) { toast("No se pudo leer esa foto. Prueba con otra"); }
+  const files = [...$("#pFoto").files];
+  $("#pFoto").value = "";
+  const libres = 6 - fotos.length;
+  if (files.length > libres) toast(libres > 0 ? `Solo caben ${libres} fotos más` : "Ya tienes 6 fotos. Quita una para agregar otra");
+  for (const f of files.slice(0, Math.max(0, libres))) {
+    try { fotos.push(await comprimir(f)); fotosCambiadas = true; pintarFotos(); }
+    catch (e) { toast("No se pudo leer una de las fotos. Prueba con otra"); }
+  }
 });
 $("#pGuardar").addEventListener("click", async () => {
   const err = $("#pErr");
@@ -301,21 +337,36 @@ $("#pGuardar").addEventListener("click", async () => {
     return { t: t.value.trim().toUpperCase().replace("ÚNICA", "Única"), stock: Math.max(0, parseInt(s.value, 10) || 0) };
   }).filter(t => t.t);
   if (!nombre || !(precio >= 0) || !tallas.length) { err.textContent = "Falta nombre, precio o al menos una talla."; err.hidden = false; return; }
-  if (!editando && !fotoNueva) { err.textContent = "Agrega una foto del producto."; err.hidden = false; return; }
+  if (!fotos.length) { err.textContent = "Agrega al menos una foto del producto."; err.hidden = false; return; }
   err.hidden = true; $("#pGuardar").disabled = true; $("#pGuardar").textContent = "Guardando…";
   const data = { nombre, precio, categoria: $("#pCat").value, descripcion: $("#pDesc").value.trim(), tallas, agotado: $("#pAgotado").checked, actualizado: serverTimestamp() };
-  if (fotoNueva) data.foto = fotoNueva;
   try {
-    if (editando) await updateDoc(doc(db, "productos", editando.id), data);
-    else await setDoc(doc(collection(db, "productos")), { ...data, creado: serverTimestamp() });
+    if (fotosCambiadas || !editando) data.foto = await comprimir(fotos[0], 640, 90000);
+    const ref = editando ? doc(db, "productos", editando.id) : doc(collection(db, "productos"));
+    if (editando) await updateDoc(ref, data);
+    else await setDoc(ref, { ...data, creado: serverTimestamp() });
+    if (fotosCambiadas || !editando) {
+      try { await setDoc(doc(db, "galerias", ref.id), { fotos }); }
+      catch (e) {
+        console.error(e);
+        err.textContent = e.code === "permission-denied"
+          ? "El producto se guardó, pero las fotos extra no. Falta actualizar las reglas de Firebase."
+          : "El producto se guardó, pero las fotos extra no. Prueba quitando una foto.";
+        err.hidden = false; $("#pGuardar").disabled = false; $("#pGuardar").textContent = "Guardar producto"; return;
+      }
+    }
     cerrar(); toast("Producto guardado");
-  } catch (e) { console.error(e); err.textContent = "No se pudo guardar. Si la foto es muy pesada, prueba con otra."; err.hidden = false; }
+  } catch (e) { console.error(e); err.textContent = "No se pudo guardar. Revisa tu conexión e intenta de nuevo."; err.hidden = false; }
   $("#pGuardar").disabled = false; $("#pGuardar").textContent = "Guardar producto";
 });
 $("#pBorrar").addEventListener("click", async () => {
   const b = $("#pBorrar");
   if (!b.dataset.sure) { b.dataset.sure = "1"; b.textContent = "¿Seguro? Toca otra vez para eliminar"; return; }
-  try { await deleteDoc(doc(db, "productos", editando.id)); cerrar(); toast("Producto eliminado"); }
+  try {
+    await deleteDoc(doc(db, "productos", editando.id));
+    deleteDoc(doc(db, "galerias", editando.id)).catch(() => {});
+    cerrar(); toast("Producto eliminado");
+  }
   catch (e) { toast("No se pudo eliminar"); }
 });
 

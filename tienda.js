@@ -1,9 +1,11 @@
-import { db, WHATSAPP_REPX, METODOS_PAGO, dinero, codigo, esc, stockTotal, estaAgotado } from "./firebase.js";
+import { db, WHATSAPP_REPX, METODOS_PAGO, TIPOS_PRENDA, dinero, codigo, esc, stockTotal, estaAgotado } from "./firebase.js";
 import { collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const $ = s => document.querySelector(s);
 let productos = [];
-let filtro = "todo";
+let filtro = "todo", tipo = "", busqueda = "";
+const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const raiz = w => w.length > 4 && w.endsWith("es") ? w.slice(0, -2) : w.length > 3 && w.endsWith("s") ? w.slice(0, -1) : w;
 let cart = [];
 try { cart = JSON.parse(localStorage.getItem("repx-cart2") || "[]"); } catch (e) { cart = []; }
 const save = () => { try { localStorage.setItem("repx-cart2", JSON.stringify(cart)); } catch (e) {} };
@@ -26,10 +28,25 @@ async function cargar() {
     $("#grid").innerHTML = `<div class="empty"><p>No pudimos cargar los productos. Revisa tu conexión y recarga la página.</p></div>`;
   }
 }
+function pintarTipos() {
+  const hay = TIPOS_PRENDA.filter(x => productos.some(p => p.tipo === x));
+  $("#tipos").innerHTML = hay.length ? [`<button type="button" data-t="" aria-pressed="${!tipo}">Todas</button>`,
+    ...hay.map(x => `<button type="button" data-t="${x}" aria-pressed="${tipo === x}">${x}</button>`)].join("") : "";
+}
+function coincide(p) {
+  if (!busqueda) return true;
+  const texto = norm([p.nombre, p.tipo, p.descripcion, p.categoria].join(" "));
+  return norm(busqueda).split(/\s+/).filter(Boolean).every(w => texto.includes(raiz(w)));
+}
 function render() {
-  const lista = productos.filter(p => filtro === "todo" || p.categoria === filtro);
+  pintarTipos();
+  const lista = productos.filter(p => (filtro === "todo" || p.categoria === filtro) && (!tipo || p.tipo === tipo) && coincide(p));
   if (!lista.length) {
-    $("#grid").innerHTML = `<div class="empty"><img src="img/bulldog.png" alt=""><p>${productos.length ? "No hay productos en esta categoría por ahora." : "Muy pronto vas a ver los productos aquí."}</p></div>`;
+    const msg = !productos.length ? "Muy pronto vas a ver los productos aquí."
+      : busqueda ? `No encontramos "${esc(busqueda)}". Prueba con otra palabra, como camiseta o short.`
+      : "No hay productos con ese filtro por ahora.";
+    $("#grid").innerHTML = `<div class="empty"><img src="img/bulldog.png" alt=""><p>${msg}</p>${busqueda || tipo || filtro !== "todo" ? `<button class="btn" type="button" id="verTodo">Ver todo</button>` : ""}</div>`;
+    $("#verTodo")?.addEventListener("click", limpiarFiltros);
     return;
   }
   $("#grid").innerHTML = lista.map(p => {
@@ -38,14 +55,27 @@ function render() {
     return `<a class="card${out ? " out" : ""}" href="producto.html?id=${encodeURIComponent(p.id)}">
       <div class="ph">${p.foto ? `<img src="${p.foto}" alt="${esc(p.nombre)}" loading="lazy">` : ""}${out ? `<span class="tag out">Agotado</span>` : ""}</div>
       <div class="row"><h3>${esc(p.nombre)}</h3><span class="price">${dinero(p.precio)}</span></div>
-      <span class="meta">${out ? "Sin disponibilidad" : "Tallas " + esc(tallas.join(" · "))}</span>
+      <span class="meta">${p.tipo ? esc(p.tipo) + " · " : ""}${out ? "Sin disponibilidad" : "Tallas " + esc(tallas.join(" · "))}</span>
     </a>`;
   }).join("");
 }
-document.querySelectorAll(".chips button").forEach(b => b.addEventListener("click", () => {
-  document.querySelectorAll(".chips button").forEach(x => x.setAttribute("aria-pressed", x === b));
+document.querySelectorAll("#genero button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("#genero button").forEach(x => x.setAttribute("aria-pressed", x === b));
   filtro = b.dataset.f; render();
 }));
+$("#tipos").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; tipo = b.dataset.t; render(); });
+let tq;
+$("#q").addEventListener("input", () => {
+  $("#qClear").hidden = !$("#q").value;
+  clearTimeout(tq); tq = setTimeout(() => { busqueda = $("#q").value.trim(); render(); }, 150);
+});
+$("#q").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("#q").blur(); } });
+$("#qClear").addEventListener("click", () => { $("#q").value = ""; $("#qClear").hidden = true; busqueda = ""; render(); $("#q").focus(); });
+function limpiarFiltros() {
+  busqueda = ""; tipo = ""; filtro = "todo"; $("#q").value = ""; $("#qClear").hidden = true;
+  document.querySelectorAll("#genero button").forEach(x => x.setAttribute("aria-pressed", x.dataset.f === "todo"));
+  render();
+}
 
 /* ---------- paneles ---------- */
 function open(id) { $("#scrim").hidden = false; $(id).hidden = false; }

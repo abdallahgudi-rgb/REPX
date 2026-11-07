@@ -55,11 +55,19 @@
     <div class="wrap">
       <div class="sec-head">
         <div><span class="label">Tienda</span><h2>Productos</h2></div>
-        <div class="chips" role="group" aria-label="Filtrar">
+        <div class="chips" id="genero" role="group" aria-label="Filtrar por género">
           <button type="button" data-f="todo" aria-pressed="true">Todo</button>
           <button type="button" data-f="hombre" aria-pressed="false">Hombre</button>
           <button type="button" data-f="mujer" aria-pressed="false">Mujer</button>
         </div>
+      </div>
+      <div class="buscador">
+        <label class="search" for="q">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+          <input id="q" type="search" placeholder="Busca camiseta, short, leggings…" autocomplete="off" enterkeyhint="search">
+          <button type="button" id="qClear" aria-label="Borrar búsqueda" hidden>×</button>
+        </label>
+        <div class="tipos" id="tipos" role="group" aria-label="Tipo de prenda"></div>
       </div>
       <div class="grid" id="grid">
         <div class="card skeleton"><div class="ph"></div></div><div class="card skeleton"><div class="ph"></div></div>

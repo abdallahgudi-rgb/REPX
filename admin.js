@@ -1,4 +1,4 @@
-import { db, auth, ADMINS, METODOS_PAGO, dinero, codigo, telWa, esc, stockTotal } from "./firebase.js";
+import { db, auth, ADMINS, METODOS_PAGO, TIPOS_PRENDA, dinero, codigo, telWa, esc, stockTotal } from "./firebase.js";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   collection, doc, onSnapshot, query, orderBy, limit, where, addDoc, setDoc, updateDoc, deleteDoc, getDoc,
@@ -183,6 +183,7 @@ async function cambiarEstado(id, estado) {
 }
 
 /* ---------------- venta manual ---------------- */
+$("#pTipo").innerHTML = `<option value="">Sin tipo</option>` + TIPOS_PRENDA.map(x => `<option>${x}</option>`).join("");
 $("#vPago").innerHTML = METODOS_PAGO.map(m => `<option>${m}</option>`).join("");
 function llenarTallasVenta() {
   const p = productos.find(x => x.id === $("#vProd").value);
@@ -230,7 +231,7 @@ function renderProductos() {
           <b>${esc(t.t)}</b><button type="button" data-a="menos" data-i="${i}" aria-label="Restar una ${esc(t.t)}">−</button>
           <span>${t.stock}</span><button type="button" data-a="mas" data-i="${i}" aria-label="Sumar una ${esc(t.t)}">+</button>
           <em>${t.stock <= 0 ? "agotada" : t.stock <= 2 ? "quedan pocas" : "disponibles"}</em></div>`).join("") || `<span class="hint">Sin tallas. Toca Editar para agregarlas.</span>`}</div>
-        <div class="kv"><span>${{ hombre: "Hombre", mujer: "Mujer" }[p.categoria] || ""}</span><span>Total: <b>${total}</b></span>${out ? `<span class="pill cancelado">Agotado</span>` : ""}</div>
+        <div class="kv"><span>${{ hombre: "Hombre", mujer: "Mujer" }[p.categoria] || ""}${p.tipo ? " · " + esc(p.tipo) : ""}</span><span>Total: <b>${total}</b></span>${out ? `<span class="pill cancelado">Agotado</span>` : ""}</div>
         <div class="actions"><button class="btn" data-a="editar">Editar</button>
           <button class="btn ${p.agotado ? "ok" : ""}" data-a="agotado">${p.agotado ? "Quitar agotado" : "Marcar agotado"}</button></div>
       </div></div>`;
@@ -274,7 +275,7 @@ async function editar(p) {
   editando = p || null; fotos = p?.foto ? [p.foto] : []; fotosCambiadas = false;
   $("#psTitle").textContent = p ? "Editar producto" : "Nuevo producto";
   $("#pNombre").value = p?.nombre || ""; $("#pPrecio").value = p?.precio ?? "";
-  $("#pCat").value = p?.categoria || "hombre"; $("#pDesc").value = p?.descripcion || "";
+  $("#pCat").value = p?.categoria || "hombre"; $("#pTipo").value = p?.tipo || ""; $("#pDesc").value = p?.descripcion || "";
   $("#pAgotado").checked = !!p?.agotado; $("#pFoto").value = "";
   pintarFotos();
   $("#pTallas").innerHTML = "";
@@ -343,7 +344,7 @@ $("#pGuardar").addEventListener("click", async () => {
   if (!nombre || !(precio >= 0) || !tallas.length) { err.textContent = "Falta nombre, precio o al menos una talla."; err.hidden = false; return; }
   if (!fotos.length) { err.textContent = "Agrega al menos una foto del producto."; err.hidden = false; return; }
   err.hidden = true; $("#pGuardar").disabled = true; $("#pGuardar").textContent = "Guardando…";
-  const data = { nombre, precio, categoria: $("#pCat").value, descripcion: $("#pDesc").value.trim(), tallas, agotado: $("#pAgotado").checked, actualizado: serverTimestamp() };
+  const data = { nombre, precio, categoria: $("#pCat").value, tipo: $("#pTipo").value, descripcion: $("#pDesc").value.trim(), tallas, agotado: $("#pAgotado").checked, actualizado: serverTimestamp() };
   try {
     if (fotosCambiadas || !editando) data.foto = await comprimir(fotos[0], 640, 90000);
     const ref = editando ? doc(db, "productos", editando.id) : doc(collection(db, "productos"));

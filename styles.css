@@ -234,3 +234,17 @@ footer a { color: var(--dust); }
 .hero2 .label { color: var(--bone); text-shadow: 0 1px 8px rgb(0 0 0 / .9); }
 
 a.card { color: inherit; text-decoration: none; }
+
+/* buscador */
+.buscador { display: grid; gap: 12px; margin-bottom: 26px; }
+.search { display: flex; align-items: center; gap: 10px; background: var(--iron); border: 2px solid var(--line); border-radius: 999px; padding: 4px 8px 4px 18px; max-width: 560px; }
+.search:focus-within { border-color: var(--bone); }
+.search svg { width: 20px; height: 20px; flex: none; fill: none; stroke: var(--dust); stroke-width: 2; }
+.search input { flex: 1; min-width: 0; background: none; border: 0; color: var(--bone); font: inherit; font-size: 16px; padding: 10px 0; outline: none; }
+.search input::-webkit-search-cancel-button { display: none; }
+.search button { width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--line); color: var(--bone); font-size: 18px; flex: none; }
+.tipos { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.tipos:empty { display: none; }
+.tipos::-webkit-scrollbar { display: none; }
+.tipos button { flex: none; background: none; border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; font-family: var(--display); font-weight: 800; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; color: var(--dust); }
+.tipos button[aria-pressed="true"] { background: var(--plum); border-color: var(--plum); color: var(--plum-ink); }

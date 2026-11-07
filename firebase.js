@@ -18,6 +18,7 @@ export const auth = getAuth(app);
 
 export const ADMINS = ["abdallahgudi@gmail.com", "samu_428@hotmail.com"];
 export const WHATSAPP_REPX = "584126133198";
+export const TIPOS_PRENDA = ["Camiseta", "Tank", "Top", "Short", "Leggings", "Set", "Vestido", "Falda", "Sudadera", "Accesorio"];
 export const METODOS_PAGO = ["Pago móvil", "Efectivo", "PayPal", "Binance", "Zinli"];
 
 // Utilidades compartidas

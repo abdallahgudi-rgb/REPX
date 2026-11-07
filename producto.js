@@ -1,5 +1,5 @@
-import { db, METODOS_PAGO, dinero, esc, estaAgotado } from "./firebase.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { METODOS_PAGO, dinero, esc, estaAgotado } from "./comun.js";
+import { obtener } from "./rest.js";
 
 const $ = s => document.querySelector(s);
 const id = new URLSearchParams(location.search).get("id");
@@ -14,25 +14,30 @@ function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = fal
 count();
 
 function noEncontrado() {
-  $("#pp").outerHTML = `<div class="nf"><img src="img/bulldog.png" alt=""><h2>Producto no disponible</h2>
+  $("#pp").outerHTML = `<div class="nf"><img src="img/bulldog.webp" alt=""><h2>Producto no disponible</h2>
     <p class="hint">Puede que ya no esté en la tienda.</p><a class="btn solid" href="./#tienda">Ver productos</a></div>`;
 }
 
 async function iniciar() {
   if (!id) return noEncontrado();
   let p;
+  // muestra al instante desde lo guardado en la tienda
   try {
-    const s = await getDoc(doc(db, "productos", id));
-    if (!s.exists()) return noEncontrado();
-    p = { id, ...s.data() };
+    const c = JSON.parse(localStorage.getItem("repx-prod-cache") || "null");
+    const prev = c?.find(x => x.id === id);
+    if (prev) { document.title = `${prev.nombre} · REPX`; pintar(prev, prev.foto ? [prev.foto] : []); }
+  } catch (e) {}
+  try {
+    p = await obtener("productos", id);
+    if (!p) return noEncontrado();
   } catch (e) {
     $("#pp").innerHTML = `<p class="hint">No pudimos cargar el producto. Revisa tu conexión y recarga.</p>`; return;
   }
   document.title = `${p.nombre} · REPX`;
   let fotos = p.foto ? [p.foto] : [];
   try {
-    const g = await getDoc(doc(db, "galerias", id));
-    if (g.exists() && g.data().fotos?.length) fotos = g.data().fotos;
+    const g = await obtener("galerias", id);
+    if (g?.fotos?.length) fotos = g.fotos;
   } catch (e) {}
   pintar(p, fotos);
 }

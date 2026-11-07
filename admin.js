@@ -216,12 +216,33 @@ $("#vGuardar").addEventListener("click", async () => {
 });
 
 /* ---------------- productos ---------------- */
+let pBusqueda = "", pFiltro = "todos", pqT;
+const normA = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+$("#pq").addEventListener("input", () => {
+  $("#pqClear").hidden = !$("#pq").value;
+  clearTimeout(pqT); pqT = setTimeout(() => { pBusqueda = $("#pq").value.trim(); renderProductos(); }, 150);
+});
+$("#pq").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("#pq").blur(); } });
+$("#pqClear").addEventListener("click", () => { $("#pq").value = ""; $("#pqClear").hidden = true; pBusqueda = ""; renderProductos(); });
+document.querySelectorAll("#pFiltro button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("#pFiltro button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  pFiltro = b.dataset.f; renderProductos();
+}));
 function renderProductos() {
   const unidades = productos.reduce((a, p) => a + stockTotal(p), 0);
   const valor = productos.reduce((a, p) => a + stockTotal(p) * (Number(p.precio) || 0), 0);
   $("#invResumen").innerHTML = `<span>Productos: <b>${productos.length}</b></span><span>Unidades en inventario: <b>${unidades}</b></span><span>Valor a precio de venta: <b>${dinero(valor)}</b></span>`;
   if (!productos.length) { $("#productos").innerHTML = `<p class="hint">Todavía no hay productos. Toca "+ Nuevo producto" para agregar el primero.</p>`; return; }
-  $("#productos").innerHTML = productos.map(p => {
+  const lista = productos.filter(p => {
+    const total = stockTotal(p), out = p.agotado || total <= 0;
+    if (pFiltro === "agotados" && !out) return false;
+    if (pFiltro === "pocas" && (out || !(p.tallas || []).some(t => t.stock > 0 && t.stock <= 2))) return false;
+    if (!pBusqueda) return true;
+    const texto = normA([p.nombre, p.tipo, p.descripcion, p.categoria, ...(p.tallas || []).map(t => "talla " + t.t)].join(" "));
+    return normA(pBusqueda).split(/\s+/).filter(Boolean).every(w => texto.includes(w.length > 4 && w.endsWith("es") ? w.slice(0, -2) : w.length > 3 && w.endsWith("s") ? w.slice(0, -1) : w));
+  });
+  if (!lista.length) { $("#productos").innerHTML = `<p class="hint">Ningún producto coincide${pBusqueda ? ` con "${esc(pBusqueda)}"` : ""}.</p>`; return; }
+  $("#productos").innerHTML = lista.map(p => {
     const total = stockTotal(p), out = p.agotado || total <= 0;
     return `<div class="item prod" data-id="${p.id}">
       ${p.foto ? `<img src="${p.foto}" alt="">` : `<div class="noimg"></div>`}

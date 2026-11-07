@@ -1,5 +1,5 @@
-import { db, WHATSAPP_REPX, METODOS_PAGO, TIPOS_PRENDA, dinero, codigo, esc, stockTotal, estaAgotado } from "./firebase.js";
-import { collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { WHATSAPP_REPX, METODOS_PAGO, TIPOS_PRENDA, dinero, codigo, esc, stockTotal, estaAgotado } from "./comun.js";
+import { listar, crear } from "./rest.js";
 
 const $ = s => document.querySelector(s);
 let productos = [];
@@ -14,18 +14,27 @@ $("#ticker").innerHTML = Array(2).fill("No excuses<i>✕</i>Just reps<i>✕</i>R
 $("#payList").innerHTML = METODOS_PAGO.map(m => `<span>${m}</span>`).join("");
 
 /* ---------- productos ---------- */
+const ordenar = l => l.filter(p => p.visible !== false)
+  .sort((a, b) => (estaAgotado(a) - estaAgotado(b)) || ((b.creado?.seconds || 0) - (a.creado?.seconds || 0)));
+let abrirCarritoAlCargar = location.hash === "#carrito";
+function listo() {
+  cart = cart.filter(l => productos.some(p => p.id === l.id));
+  save(); count(); render();
+  if (abrirCarritoAlCargar) { abrirCarritoAlCargar = false; renderCart(); open("#cart"); history.replaceState(null, "", location.pathname); }
+}
 async function cargar() {
+  // 1) muestra al instante lo que se vio la última vez
   try {
-    const snap = await getDocs(collection(db, "productos"));
-    productos = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-      .filter(p => p.visible !== false)
-      .sort((a, b) => (estaAgotado(a) - estaAgotado(b)) || ((b.creado?.seconds || 0) - (a.creado?.seconds || 0)));
-    // limpia del carrito lo que ya no existe
-    cart = cart.filter(l => productos.some(p => p.id === l.id));
-    save(); count(); render();
-    if (location.hash === "#carrito") { renderCart(); open("#cart"); history.replaceState(null, "", location.pathname); }
+    const c = JSON.parse(localStorage.getItem("repx-prod-cache") || "null");
+    if (c?.length) { productos = ordenar(c); listo(); }
+  } catch (e) {}
+  // 2) trae lo más reciente
+  try {
+    const frescos = ordenar(await listar("productos"));
+    productos = frescos; listo();
+    try { localStorage.setItem("repx-prod-cache", JSON.stringify(frescos)); } catch (e) {}
   } catch (e) {
-    $("#grid").innerHTML = `<div class="empty"><p>No pudimos cargar los productos. Revisa tu conexión y recarga la página.</p></div>`;
+    if (!productos.length) $("#grid").innerHTML = `<div class="empty"><p>No pudimos cargar los productos. Revisa tu conexión y recarga la página.</p></div>`;
   }
 }
 function pintarTipos() {
@@ -45,7 +54,7 @@ function render() {
     const msg = !productos.length ? "Muy pronto vas a ver los productos aquí."
       : busqueda ? `No encontramos "${esc(busqueda)}". Prueba con otra palabra, como camiseta o short.`
       : "No hay productos con ese filtro por ahora.";
-    $("#grid").innerHTML = `<div class="empty"><img src="img/bulldog.png" alt=""><p>${msg}</p>${busqueda || tipo || filtro !== "todo" ? `<button class="btn" type="button" id="verTodo">Ver todo</button>` : ""}</div>`;
+    $("#grid").innerHTML = `<div class="empty"><img src="img/bulldog.webp" alt=""><p>${msg}</p>${busqueda || tipo || filtro !== "todo" ? `<button class="btn" type="button" id="verTodo">Ver todo</button>` : ""}</div>`;
     $("#verTodo")?.addEventListener("click", limpiarFiltros);
     return;
   }
@@ -132,7 +141,7 @@ try { datos = { ...datos, ...JSON.parse(localStorage.getItem("repx-datos") || "{
 function renderCart() {
   const body = $("#cartBody"), foot = $("#cartFoot");
   if (!cart.length) {
-    body.innerHTML = `<div class="empty"><img src="img/bulldog.png" alt=""><p>Tu carrito está vacío.</p><button class="btn" type="button" data-close>Ver productos</button></div>`;
+    body.innerHTML = `<div class="empty"><img src="img/bulldog.webp" alt=""><p>Tu carrito está vacío.</p><button class="btn" type="button" data-close>Ver productos</button></div>`;
     body.querySelector("[data-close]").addEventListener("click", closeAll);
     foot.hidden = true; return;
   }
@@ -215,15 +224,15 @@ async function enviar() {
   const btn = $("#sendOrder"); btn.disabled = true; btn.textContent = "Enviando…";
   try {
     const items = cart.map(l => { const p = prod(l.id); return { id: l.id, nombre: p.nombre, talla: l.talla, qty: l.qty, precio: Number(p.precio) }; });
-    const ref = await addDoc(collection(db, "pedidos"), {
+    const ref = await crear("pedidos", {
       estado: "pendiente", origen: "web", items, total: total(),
       cliente: { nombre: datos.nombre, telefono: datos.telefono },
       envio: datos.envio, zona: datos.envio === "delivery" ? datos.zona : "",
-      pago: datos.pago, nota: datos.nota, creado: serverTimestamp(),
+      pago: datos.pago, nota: datos.nota, creado: new Date(),
     });
     const url = `https://wa.me/${WHATSAPP_REPX}?text=${encodeURIComponent(mensaje(ref.id))}`;
     cart = []; save(); count();
-    $("#cartBody").innerHTML = `<div class="empty"><img src="img/bulldog.png" alt=""><h2 style="font-size:36px">Pedido #${codigo(ref.id)}</h2>
+    $("#cartBody").innerHTML = `<div class="empty"><img src="img/bulldog.webp" alt=""><h2 style="font-size:36px">Pedido #${codigo(ref.id)}</h2>
       <p>Ya lo recibimos. Ahora envíalo por WhatsApp para confirmar el pago y la entrega.</p>
       <a class="btn plum" href="${url}" target="_blank" rel="noopener">Abrir WhatsApp</a>
       <p class="hint">Si WhatsApp no abre, escríbenos al 0412-6133198 con tu número de pedido.</p></div>`;

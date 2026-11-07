@@ -42,6 +42,7 @@
   .btn.bad { border-color: var(--bad); color: var(--bad); }
   .prod { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 12px; align-items: start; }
   .prod img, .prod .noimg { width: 72px; height: 90px; object-fit: cover; background: var(--ink); }
+  .pbusca { display: grid; gap: 10px; }
   .inv { display: grid; gap: 6px; }
   .inv-row { display: grid; grid-template-columns: 44px 34px 40px 34px 1fr; align-items: center; gap: 6px; }
   .inv-row b { font-family: var(--display); font-size: 18px; }
@@ -127,6 +128,18 @@
       <div class="toolbar">
         <div class="kv" id="invResumen"></div>
         <button class="btn sm solid" type="button" id="nuevoProd">+ Nuevo producto</button>
+      </div>
+      <div class="pbusca">
+        <label class="search" for="pq">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+          <input id="pq" type="search" placeholder="Buscar producto, tipo o talla…" autocomplete="off" enterkeyhint="search">
+          <button type="button" id="pqClear" aria-label="Borrar búsqueda" hidden>×</button>
+        </label>
+        <div class="chips" id="pFiltro">
+          <button type="button" data-f="todos" aria-pressed="true">Todos</button>
+          <button type="button" data-f="pocas" aria-pressed="false">Quedan pocas</button>
+          <button type="button" data-f="agotados" aria-pressed="false">Agotados</button>
+        </div>
       </div>
       <div class="list" id="productos"><p class="hint">Cargando productos…</p></div>
     </div>

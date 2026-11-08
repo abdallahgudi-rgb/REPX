@@ -248,3 +248,9 @@ a.card { color: inherit; text-decoration: none; }
 .tipos::-webkit-scrollbar { display: none; }
 .tipos button { flex: none; background: none; border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; font-family: var(--display); font-weight: 800; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; color: var(--dust); }
 .tipos button[aria-pressed="true"] { background: var(--plum); border-color: var(--plum); color: var(--plum-ink); }
+
+/* cinta con bulldog y logo */
+.ticker img { display: inline-block; vertical-align: middle; width: auto; max-width: none; }
+.ticker .t-dog { height: 30px; margin: -4px 20px 0; }
+.ticker .t-logo { height: 20px; margin-top: -3px; }
+.store .hero-actions { gap: 22px 16px; }

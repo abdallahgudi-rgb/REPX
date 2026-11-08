@@ -10,7 +10,7 @@ let cart = [];
 try { cart = JSON.parse(localStorage.getItem("repx-cart2") || "[]"); } catch (e) { cart = []; }
 const save = () => { try { localStorage.setItem("repx-cart2", JSON.stringify(cart)); } catch (e) {} };
 
-$("#ticker").innerHTML = Array(2).fill("No excuses<i>✕</i>Just reps<i>✕</i>Relentless<i>✕</i>Built different<i>✕</i>").join("");
+$("#ticker").innerHTML = Array(2).fill('No excuses<img class="t-dog" src="img/bulldog.webp" alt="">Just REPX<img class="t-dog" src="img/bulldog.webp" alt=""><img class="t-logo" src="img/logo-repx.png" alt=""><img class="t-dog" src="img/bulldog.webp" alt="">Relentless<img class="t-dog" src="img/bulldog.webp" alt="">Built different<img class="t-dog" src="img/bulldog.webp" alt=""><img class="t-logo" src="img/logo-repx.png" alt=""><img class="t-dog" src="img/bulldog.webp" alt="">').join("");
 $("#payList").innerHTML = METODOS_PAGO.map(m => `<span>${m}</span>`).join("");
 
 /* ---------- productos ---------- */
@@ -209,7 +209,7 @@ function mensaje(id) {
     ...(datos.nota ? [`Nota: ${datos.nota}`] : []),
     "",
     datos.envio === "delivery" ? "Les envío mi ubicación por aquí 📍" : "¿Dónde y cuándo puedo retirar?",
-    "No excuses. Just reps.",
+    "No excuses. Just REPX.",
   ].join("\n");
 }
 async function enviar() {

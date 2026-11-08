@@ -115,7 +115,7 @@ function msgCliente(p) {
     `Método de pago: ${p.pago}`,
     p.envio === "delivery" ? "Entrega: Delivery. Envíanos tu ubicación por aquí si aún no lo hiciste 📍" : "Entrega: Pickup. Te confirmamos punto y hora por aquí.",
     "",
-    "Gracias por ser parte de los relentless. No excuses. Just reps.",
+    "Gracias por ser parte de los relentless. No excuses. Just REPX.",
   ].join("\n");
 }
 $("#pedidos").addEventListener("click", async e => {

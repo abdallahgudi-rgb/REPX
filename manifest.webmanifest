@@ -1,7 +1,7 @@
 {
   "name": "REPX",
   "short_name": "REPX",
-  "description": "Ropa deportiva para gym. No excuses. Just reps.",
+  "description": "Ropa deportiva para gym. No excuses. Just REPX.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

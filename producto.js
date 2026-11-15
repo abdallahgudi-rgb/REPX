@@ -4,9 +4,26 @@ import { obtener } from "./rest.js";
 const $ = s => document.querySelector(s);
 const id = new URLSearchParams(location.search).get("id");
 let cart = [];
-try { cart = JSON.parse(localStorage.getItem("repx-cart2") || "[]"); } catch (e) { cart = []; }
+function leerCarrito() {
+  try { const c = JSON.parse(localStorage.getItem("repx-cart2") || "[]"); cart = Array.isArray(c) ? c.filter(l => l && l.id && l.talla && l.qty > 0) : []; }
+  catch (e) { cart = []; }
+  return cart;
+}
+leerCarrito();
 const save = () => { try { localStorage.setItem("repx-cart2", JSON.stringify(cart)); } catch (e) {} };
+// guarda este producto en la lista del teléfono, para que la tienda lo reconozca al abrir el carrito
+function recordar(p) {
+  try {
+    const c = JSON.parse(localStorage.getItem("repx-prod-cache") || "[]");
+    const i = c.findIndex(x => x.id === p.id);
+    const min = { ...p }; delete min.toDate;
+    if (i >= 0) c[i] = min; else c.unshift(min);
+    localStorage.setItem("repx-prod-cache", JSON.stringify(c));
+  } catch (e) {}
+}
+addEventListener("pageshow", () => { leerCarrito(); count(); });
 function count() {
+  leerCarrito();
   const n = cart.reduce((a, l) => a + l.qty, 0);
   $("#cartCount").textContent = n; $("#tabCount").textContent = n; $("#tabCount").hidden = n === 0;
 }
@@ -30,6 +47,7 @@ async function iniciar() {
   try {
     p = await obtener("productos", id);
     if (!p) return noEncontrado();
+    recordar(p);
   } catch (e) {
     $("#pp").innerHTML = `<p class="hint">No pudimos cargar el producto. Revisa tu conexión y recarga.</p>`; return;
   }
@@ -116,6 +134,7 @@ function pintar(p, fotos) {
   });
   const agregar = () => {
     if (!talla) { toast("Elige una talla primero"); return false; }
+    leerCarrito();
     const max = stockDe(talla) - enCarrito(talla);
     if (qty > max) { toast(max > 0 ? `Solo puedes agregar ${max} más en talla ${talla}` : `Ya tienes todas las de talla ${talla} en tu carrito`); return false; }
     const ex = cart.find(l => l.id === p.id && l.talla === talla);

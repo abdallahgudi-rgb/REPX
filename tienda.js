@@ -6,8 +6,15 @@ let productos = [];
 let filtro = "todo", tipo = "", busqueda = "";
 const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 const raiz = w => w.length > 4 && w.endsWith("es") ? w.slice(0, -2) : w.length > 3 && w.endsWith("s") ? w.slice(0, -1) : w;
+// El carrito se guarda en el teléfono. Siempre se vuelve a leer antes de usarlo,
+// para no perder lo agregado desde otra página o al volver atrás.
 let cart = [];
-try { cart = JSON.parse(localStorage.getItem("repx-cart2") || "[]"); } catch (e) { cart = []; }
+function leerCarrito() {
+  try { const c = JSON.parse(localStorage.getItem("repx-cart2") || "[]"); cart = Array.isArray(c) ? c.filter(l => l && l.id && l.talla && l.qty > 0) : []; }
+  catch (e) { cart = []; }
+  return cart;
+}
+leerCarrito();
 const save = () => { try { localStorage.setItem("repx-cart2", JSON.stringify(cart)); } catch (e) {} };
 
 $("#ticker").innerHTML = Array(2).fill('No excuses<img class="t-dog" src="img/bulldog.webp" alt="">Just REPX<img class="t-dog" src="img/bulldog.webp" alt=""><img class="t-logo" src="img/logo-repx.png" alt=""><img class="t-dog" src="img/bulldog.webp" alt="">Relentless<img class="t-dog" src="img/bulldog.webp" alt="">Built different<img class="t-dog" src="img/bulldog.webp" alt=""><img class="t-logo" src="img/logo-repx.png" alt=""><img class="t-dog" src="img/bulldog.webp" alt="">').join("");
@@ -16,11 +23,26 @@ $("#payList").innerHTML = METODOS_PAGO.map(m => `<span>${m}</span>`).join("");
 /* ---------- productos ---------- */
 const ordenar = l => l.filter(p => p.visible !== false)
   .sort((a, b) => (estaAgotado(a) - estaAgotado(b)) || ((b.creado?.seconds || 0) - (a.creado?.seconds || 0)));
-let abrirCarritoAlCargar = location.hash === "#carrito";
-function listo() {
-  cart = cart.filter(l => productos.some(p => p.id === l.id));
-  save(); count(); render();
-  if (abrirCarritoAlCargar) { abrirCarritoAlCargar = false; renderCart(); open("#cart"); history.replaceState(null, "", location.pathname); }
+let cargado = false; // true cuando ya llegó la lista actualizada de internet
+// Ajusta el carrito SOLO con la lista actualizada (nunca con la guardada, que puede estar vieja)
+function ajustarCarrito() {
+  leerCarrito();
+  const antes = cart.reduce((a, l) => a + l.qty, 0);
+  const avisos = [];
+  cart = cart.filter(l => {
+    const p = prod(l.id);
+    if (!p) { avisos.push("Un producto ya no está disponible"); return false; }
+    const st = Number(p.tallas?.find(t => t.t === l.talla)?.stock) || 0;
+    if (estaAgotado(p) || st <= 0) { avisos.push(`${p.nombre} (${l.talla}) se agotó`); return false; }
+    if (l.qty > st) { l.qty = st; avisos.push(`Solo quedan ${st} de ${p.nombre} (${l.talla})`); }
+    return true;
+  });
+  if (cart.reduce((a, l) => a + l.qty, 0) !== antes) { save(); if (avisos.length) toast(avisos[0]); }
+}
+function listo(fresco) {
+  if (fresco) { cargado = true; ajustarCarrito(); }
+  count(); render();
+  if (!$("#cart").hidden) renderCart();
 }
 async function cargar() {
   // 1) muestra al instante lo que se vio la última vez
@@ -31,7 +53,7 @@ async function cargar() {
   // 2) trae lo más reciente
   try {
     const frescos = ordenar(await listar("productos"));
-    productos = frescos; listo();
+    productos = frescos; listo(true);
     try { localStorage.setItem("repx-prod-cache", JSON.stringify(frescos)); } catch (e) {}
   } catch (e) {
     if (!productos.length) $("#grid").innerHTML = `<div class="empty"><p>No pudimos cargar los productos. Revisa tu conexión y recarga la página.</p></div>`;
@@ -121,6 +143,7 @@ $("#pdSizes").addEventListener("click", e => {
 });
 $("#pdAdd").addEventListener("click", () => {
   if (!talla) { toast("Elige una talla primero"); return; }
+  leerCarrito();
   const st = actual.tallas.find(t => t.t === talla)?.stock || 0;
   const ex = cart.find(l => l.id === actual.id && l.talla === talla);
   if ((ex?.qty || 0) + 1 > st) { toast(`Solo quedan ${st} en talla ${talla}`); return; }
@@ -131,6 +154,7 @@ $("#pdAdd").addEventListener("click", () => {
 /* ---------- carrito y pedido ---------- */
 const prod = id => productos.find(p => p.id === id);
 function count() {
+  leerCarrito();
   const n = cart.reduce((a, l) => a + l.qty, 0);
   $("#cartCount").textContent = n; $("#tabCount").textContent = n; $("#tabCount").hidden = n === 0;
 }
@@ -139,6 +163,7 @@ let datos = { nombre: "", telefono: "", envio: "pickup", zona: "", pago: METODOS
 try { datos = { ...datos, ...JSON.parse(localStorage.getItem("repx-datos") || "{}") }; } catch (e) {}
 
 function renderCart() {
+  leerCarrito();
   const body = $("#cartBody"), foot = $("#cartFoot");
   if (!cart.length) {
     body.innerHTML = `<div class="empty"><img src="img/bulldog.webp" alt=""><p>Tu carrito está vacío.</p><button class="btn" type="button" data-close>Ver productos</button></div>`;
@@ -146,8 +171,10 @@ function renderCart() {
     foot.hidden = true; return;
   }
   foot.hidden = false;
+  const faltan = cart.some(l => !prod(l.id));
   body.innerHTML = cart.map((l, i) => {
     const p = prod(l.id);
+    if (!p) return `<div class="line"><span></span><div><h4>Cargando producto…</h4><span class="label">Talla ${esc(l.talla)} · ${l.qty} ud.</span></div><span></span></div>`;
     return `<div class="line">${p.foto ? `<img src="${p.foto}" alt="">` : "<span></span>"}<div><h4>${esc(p.nombre)}</h4><span class="label">Talla ${esc(l.talla)}</span><br>
       <span class="qty"><button type="button" data-i="${i}" data-d="-1" aria-label="Quitar uno">−</button><span>${l.qty}</span><button type="button" data-i="${i}" data-d="1" aria-label="Agregar uno">+</button></span></div>
       <span class="price">${dinero(p.precio * l.qty)}</span></div>`;
@@ -169,7 +196,9 @@ function renderCart() {
     <div class="field"><label class="label" for="cNota">Nota (opcional)</label><input id="cNota" value="${esc(datos.nota)}" placeholder="Ej. color, hora de entrega"></div>
     <p class="err" id="cErr" hidden></p>`;
   body.querySelectorAll(".qty button").forEach(b => b.addEventListener("click", () => {
-    const l = cart[b.dataset.i], st = prod(l.id).tallas.find(t => t.t === l.talla)?.stock || 0;
+    leerCarrito();
+    const l = cart[b.dataset.i]; if (!l || !prod(l.id)) return;
+    const st = prod(l.id).tallas?.find(t => t.t === l.talla)?.stock || 0;
     if (+b.dataset.d > 0 && l.qty >= st) { toast(`Solo quedan ${st} en talla ${l.talla}`); return; }
     l.qty += +b.dataset.d;
     if (l.qty <= 0) cart.splice(b.dataset.i, 1);
@@ -179,8 +208,9 @@ function renderCart() {
     $("#deliveryBox").hidden = r.value !== "delivery" || !r.checked;
     $("#pickupNote").hidden = r.value !== "pickup" || !r.checked;
   }));
-  foot.innerHTML = `<div class="total"><span>Total</span><span class="price">${dinero(total())}</span></div>
-    <button class="btn plum" type="button" id="sendOrder">Hacer pedido por WhatsApp</button>`;
+  const espera = faltan && !cargado;
+  foot.innerHTML = `<div class="total"><span>Total</span><span class="price">${espera ? "…" : dinero(total())}</span></div>
+    <button class="btn plum" type="button" id="sendOrder" ${espera ? "disabled" : ""}>${espera ? "Cargando productos…" : "Hacer pedido por WhatsApp"}</button>`;
   $("#sendOrder").addEventListener("click", enviar);
 }
 function leer() {
@@ -214,6 +244,8 @@ function mensaje(id) {
 }
 async function enviar() {
   leer();
+  leerCarrito();
+  if (!cart.length || cart.some(l => !prod(l.id))) { renderCart(); return; }
   const err = $("#cErr");
   const faltan = [];
   if (!datos.nombre) faltan.push("tu nombre");
@@ -243,8 +275,13 @@ async function enviar() {
     btn.disabled = false; btn.textContent = "Hacer pedido por WhatsApp";
   }
 }
-$("#openCart").addEventListener("click", () => { renderCart(); open("#cart"); });
-$("#tabCart").addEventListener("click", () => { renderCart(); open("#cart"); });
+function abrirCarrito() { renderCart(); open("#cart"); }
+$("#openCart").addEventListener("click", abrirCarrito);
+$("#tabCart").addEventListener("click", abrirCarrito);
+if (location.hash === "#carrito") { abrirCarrito(); history.replaceState(null, "", location.pathname); }
+// al volver atrás o cambiar de pestaña, actualiza el carrito
+addEventListener("pageshow", () => { count(); if (!$("#cart").hidden) renderCart(); });
+addEventListener("storage", e => { if (e.key === "repx-cart2") { count(); if (!$("#cart").hidden) renderCart(); } });
 
 /* ---------- app instalable ---------- */
 let installEvt = null;

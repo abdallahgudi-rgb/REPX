@@ -1,4 +1,4 @@
-import { db, auth, ADMINS, METODOS_PAGO, TIPOS_PRENDA, dinero, codigo, telWa, esc, stockTotal } from "./firebase.js";
+import { db, auth, ADMINS, METODOS_PAGO, FAMILIAS, tipoDe, familiaDe, sinonimosDe, dinero, codigo, telWa, esc, stockTotal } from "./firebase.js";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   collection, doc, onSnapshot, query, orderBy, limit, where, addDoc, setDoc, updateDoc, deleteDoc, getDoc,
@@ -15,8 +15,12 @@ let productos = [], pedidos = [], pagados = [];
 let unsubs = [];
 
 /* ---------------- acceso ---------------- */
+// mientras confirma si ya entraste, muestra "Cargando panel…" (no el formulario)
+const verLogin = () => { $("#cargandoPanel").hidden = true; if ($("#appView").hidden) $("#loginView").hidden = false; };
+setTimeout(verLogin, 4000);
 onAuthStateChanged(auth, user => {
   window.__adminOk = true;
+  $("#cargandoPanel").hidden = true;
   unsubs.forEach(u => u()); unsubs = [];
   const ok = user && ADMINS.includes((user.email || "").toLowerCase());
   if (user && !ok) { signOut(auth); mostrarError("Este correo no tiene acceso al panel."); }
@@ -49,7 +53,7 @@ $("#logout").addEventListener("click", () => signOut(auth));
 /* ---------------- pestañas ---------------- */
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
-  ["pedidos", "productos", "ventas"].forEach(t => $("#tab-" + t).hidden = t !== b.dataset.tab);
+  ["pedidos", "productos", "ventas", "ayuda"].forEach(t => $("#tab-" + t).hidden = t !== b.dataset.tab);
 }));
 function abrir(id) { $("#scrim").hidden = false; $(id).hidden = false; }
 function cerrar() { $("#scrim").hidden = true; document.querySelectorAll(".sheet").forEach(s => s.hidden = true); }
@@ -127,7 +131,10 @@ $("#pedidos").addEventListener("click", async e => {
   }
   b.disabled = true;
   try {
-    if (a === "pagar") { await pagar(id); toast("Pedido pagado. Inventario actualizado"); }
+    if (a === "pagar") {
+      const faltas = await pagar(id);
+      toast(faltas.length ? `Pagado. Ojo, faltaba inventario: ${faltas[0]}` : "Pedido pagado. Inventario actualizado");
+    }
     if (a === "cancelar") { await cambiarEstado(id, "cancelado"); toast("Pedido cancelado"); }
     if (a === "pendiente") { await cambiarEstado(id, "pendiente"); toast("Pedido en pendiente"); }
     if (a === "borrar") { await deleteDoc(doc(db, "pedidos", id)); toast("Pedido eliminado"); }
@@ -136,7 +143,9 @@ $("#pedidos").addEventListener("click", async e => {
 
 // Marca pagado y descuenta las unidades vendidas del inventario
 async function pagar(id) {
+  const faltas = [];
   await runTransaction(db, async tx => {
+    faltas.length = 0;
     const pref = doc(db, "pedidos", id);
     const ps = await tx.get(pref);
     if (!ps.exists() || ps.data().estado === "pagado") return;
@@ -149,12 +158,15 @@ async function pagar(id) {
       const tallas = (snaps[pid].data().tallas || []).map(t => ({ ...t }));
       items.filter(i => i.id === pid).forEach(i => {
         const t = tallas.find(x => x.t === i.talla);
-        if (t) t.stock = Math.max(0, (Number(t.stock) || 0) - i.qty);
+        const hay = Number(t?.stock) || 0;
+        if (hay < i.qty) faltas.push(`${i.nombre} (${i.talla}): había ${hay}`);
+        if (t) t.stock = Math.max(0, hay - i.qty);
       });
       tx.update(doc(db, "productos", pid), { tallas });
     }
     tx.update(pref, { estado: "pagado", pagadoEn: serverTimestamp(), stockAplicado: true });
   });
+  return faltas;
 }
 // Cambia estado; si estaba pagado, devuelve las unidades al inventario
 async function cambiarEstado(id, estado) {
@@ -183,7 +195,7 @@ async function cambiarEstado(id, estado) {
 }
 
 /* ---------------- venta manual ---------------- */
-$("#pTipo").innerHTML = `<option value="">Sin tipo</option>` + TIPOS_PRENDA.map(x => `<option>${x}</option>`).join("");
+$("#pTipo").innerHTML = `<option value="">Sin tipo</option>` + FAMILIAS.map(f => `<optgroup label="${f.f}">${f.tipos.map(x => `<option>${x}</option>`).join("")}</optgroup>`).join("");
 $("#vPago").innerHTML = METODOS_PAGO.map(m => `<option>${m}</option>`).join("");
 function llenarTallasVenta() {
   const p = productos.find(x => x.id === $("#vProd").value);
@@ -201,6 +213,13 @@ $("#vGuardar").addEventListener("click", async () => {
   const p = productos.find(x => x.id === $("#vProd").value);
   const qty = parseInt($("#vQty").value, 10), precio = parseFloat($("#vPrecio").value);
   if (!p || !$("#vTalla").value || !(qty > 0) || !(precio >= 0)) { $("#vErr").textContent = "Revisa producto, talla, cantidad y precio."; $("#vErr").hidden = false; return; }
+  const hay = Number(p.tallas?.find(t => t.t === $("#vTalla").value)?.stock) || 0;
+  const firma = `${p.id}|${$("#vTalla").value}|${qty}`;
+  if (qty > hay && $("#vGuardar").dataset.sure !== firma) {
+    $("#vErr").textContent = `En el inventario solo hay ${hay} en talla ${$("#vTalla").value}. Toca "Registrar venta" otra vez si igual quieres registrarla.`;
+    $("#vErr").hidden = false; $("#vGuardar").dataset.sure = firma; return;
+  }
+  delete $("#vGuardar").dataset.sure;
   $("#vGuardar").disabled = true;
   try {
     const ref = await addDoc(collection(db, "pedidos"), {
@@ -238,7 +257,7 @@ function renderProductos() {
     if (pFiltro === "agotados" && !out) return false;
     if (pFiltro === "pocas" && (out || !(p.tallas || []).some(t => t.stock > 0 && t.stock <= 2))) return false;
     if (!pBusqueda) return true;
-    const texto = normA([p.nombre, p.tipo, p.descripcion, p.categoria, ...(p.tallas || []).map(t => "talla " + t.t)].join(" "));
+    const texto = normA([p.nombre, tipoDe(p), familiaDe(p), sinonimosDe(p), p.descripcion, p.categoria, ...(p.tallas || []).map(t => "talla " + t.t)].join(" "));
     return normA(pBusqueda).split(/\s+/).filter(Boolean).every(w => texto.includes(w.length > 4 && w.endsWith("es") ? w.slice(0, -2) : w.length > 3 && w.endsWith("s") ? w.slice(0, -1) : w));
   });
   if (!lista.length) { $("#productos").innerHTML = `<p class="hint">Ningún producto coincide${pBusqueda ? ` con "${esc(pBusqueda)}"` : ""}.</p>`; return; }
@@ -252,7 +271,7 @@ function renderProductos() {
           <b>${esc(t.t)}</b><button type="button" data-a="menos" data-i="${i}" aria-label="Restar una ${esc(t.t)}">−</button>
           <span>${t.stock}</span><button type="button" data-a="mas" data-i="${i}" aria-label="Sumar una ${esc(t.t)}">+</button>
           <em>${t.stock <= 0 ? "agotada" : t.stock <= 2 ? "quedan pocas" : "disponibles"}</em></div>`).join("") || `<span class="hint">Sin tallas. Toca Editar para agregarlas.</span>`}</div>
-        <div class="kv"><span>${{ hombre: "Hombre", mujer: "Mujer" }[p.categoria] || ""}${p.tipo ? " · " + esc(p.tipo) : ""}</span><span>Total: <b>${total}</b></span>${out ? `<span class="pill cancelado">Agotado</span>` : ""}</div>
+        <div class="kv"><span>${{ hombre: "Hombre", mujer: "Mujer" }[p.categoria] || ""}${tipoDe(p) ? " · " + esc(tipoDe(p)) : ""}</span><span>Total: <b>${total}</b></span>${out ? `<span class="pill cancelado">Agotado</span>` : ""}</div>
         <div class="actions"><button class="btn" data-a="editar">Editar</button>
           <button class="btn ${p.agotado ? "ok" : ""}" data-a="agotado">${p.agotado ? "Quitar agotado" : "Marcar agotado"}</button></div>
       </div></div>`;
@@ -263,12 +282,19 @@ $("#productos").addEventListener("click", async e => {
   const p = productos.find(x => x.id === b.closest(".item").dataset.id);
   if (b.dataset.a === "editar") editar(p);
   if (b.dataset.a === "mas" || b.dataset.a === "menos") {
-    const tallas = (p.tallas || []).map(t => ({ ...t }));
-    const t = tallas[+b.dataset.i];
-    t.stock = Math.max(0, (Number(t.stock) || 0) + (b.dataset.a === "mas" ? 1 : -1));
-    b.disabled = true;
-    try { await updateDoc(doc(db, "productos", p.id), { tallas }); }
-    catch (err) { toast("No se pudo guardar"); b.disabled = false; }
+    const nombreTalla = (p.tallas || [])[+b.dataset.i]?.t, delta = b.dataset.a === "mas" ? 1 : -1;
+    const span = b.parentElement.querySelector("span");
+    if (span) span.textContent = Math.max(0, (Number(span.textContent) || 0) + delta); // se ve al instante
+    try {
+      await runTransaction(db, async tx => {
+        const ref = doc(db, "productos", p.id), s = await tx.get(ref);
+        if (!s.exists()) return;
+        const tallas = (s.data().tallas || []).map(t => ({ ...t }));
+        const t = tallas.find(x => x.t === nombreTalla); if (!t) return;
+        t.stock = Math.max(0, (Number(t.stock) || 0) + delta);
+        tx.update(ref, { tallas });
+      });
+    } catch (err) { toast("No se pudo guardar. Revisa tu conexión"); renderProductos(); }
   }
   if (b.dataset.a === "agotado") {
     try { await updateDoc(doc(db, "productos", p.id), { agotado: !p.agotado }); toast(p.agotado ? "Disponible otra vez" : "Marcado como agotado"); }
@@ -296,7 +322,7 @@ async function editar(p) {
   editando = p || null; fotos = p?.foto ? [p.foto] : []; fotosCambiadas = false;
   $("#psTitle").textContent = p ? "Editar producto" : "Nuevo producto";
   $("#pNombre").value = p?.nombre || ""; $("#pPrecio").value = p?.precio ?? "";
-  $("#pCat").value = p?.categoria || "hombre"; $("#pTipo").value = p?.tipo || ""; $("#pDesc").value = p?.descripcion || "";
+  $("#pCat").value = p?.categoria || "hombre"; $("#pTipo").value = tipoDe(p); $("#pDesc").value = p?.descripcion || "";
   $("#pAgotado").checked = !!p?.agotado; $("#pFoto").value = "";
   pintarFotos();
   $("#pTallas").innerHTML = "";
@@ -363,6 +389,8 @@ $("#pGuardar").addEventListener("click", async () => {
     return { t: t.value.trim().toUpperCase().replace("ÚNICA", "Única"), stock: Math.max(0, parseInt(s.value, 10) || 0) };
   }).filter(t => t.t);
   if (!nombre || !(precio >= 0) || !tallas.length) { err.textContent = "Falta nombre, precio o al menos una talla."; err.hidden = false; return; }
+  const repetida = tallas.find((t, i) => tallas.findIndex(x => x.t === t.t) !== i);
+  if (repetida) { err.textContent = `La talla ${repetida.t} está repetida. Déjala una sola vez.`; err.hidden = false; return; }
   if (!fotos.length) { err.textContent = "Agrega al menos una foto del producto."; err.hidden = false; return; }
   err.hidden = true; $("#pGuardar").disabled = true; $("#pGuardar").textContent = "Guardando…";
   const data = { nombre, precio, categoria: $("#pCat").value, tipo: $("#pTipo").value, descripcion: $("#pDesc").value.trim(), tallas, agotado: $("#pAgotado").checked, actualizado: serverTimestamp() };

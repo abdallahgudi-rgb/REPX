@@ -3,8 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>REPX Tienda</title>
+<title>REPX · Ropa deportiva para gym</title>
 <meta name="description" content="REPX: ropa deportiva para gym. No excuses. Just REPX.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="REPX">
+<meta property="og:title" content="REPX · Ropa deportiva para gym">
+<meta property="og:description" content="No excuses. Just REPX. Compra por WhatsApp: pickup o delivery en Venezuela.">
+<meta property="og:image" content="https://repx.repxve.workers.dev/img/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://repx.repxve.workers.dev/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://repx.repxve.workers.dev/img/og.jpg">
 <meta name="theme-color" content="#0f0f11">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -65,10 +75,11 @@
       <div class="buscador">
         <label class="search" for="q">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
-          <input id="q" type="search" placeholder="Busca camiseta, short, leggings…" autocomplete="off" enterkeyhint="search">
+          <input id="q" type="search" placeholder="Busca franela, jogger, leggings, top…" autocomplete="off" enterkeyhint="search">
           <button type="button" id="qClear" aria-label="Borrar búsqueda" hidden>×</button>
         </label>
         <div class="tipos" id="tipos" role="group" aria-label="Tipo de prenda"></div>
+        <div class="tipos sub" id="subtipos" role="group" aria-label="Estilo"></div>
       </div>
       <div class="grid" id="grid">
         <div class="card skeleton"><div class="ph"></div></div><div class="card skeleton"><div class="ph"></div></div>
@@ -103,9 +114,14 @@
 </main>
 
 <footer>
-  <div class="wrap">
+  <div class="wrap foot">
     <img src="img/r-mark.png" alt="REPX">
-    <span class="label">REPX · Relentless · Venezuela · <a href="admin.html">Equipo</a></span>
+    <div class="foot-info">
+      <span class="label">Pedidos y dudas por WhatsApp</span>
+      <a class="foot-wa" href="https://wa.me/584126133198" target="_blank" rel="noopener">0412-6133198</a>
+      <span class="label">Pago móvil · Efectivo · PayPal · Binance · Zinli</span>
+    </div>
+    <span class="label">© REPX · Relentless · Venezuela · <a href="admin.html">Equipo</a></span>
   </div>
 </footer>
 
@@ -117,20 +133,6 @@
 </nav>
 
 <div class="scrim" id="scrim" hidden></div>
-
-<aside class="sheet" id="product" hidden aria-labelledby="pdTitle">
-  <div class="sheet-head"><span class="label" id="pdCat"></span><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
-  <div class="sheet-body">
-    <img class="pd-img" id="pdImg" alt="">
-    <div><h2 id="pdTitle"></h2><p class="hint" id="pdDesc"></p></div>
-    <div class="field"><span class="label">Talla</span><div class="sizes" id="pdSizes"></div></div>
-    <p class="hint" id="pdStock"></p>
-  </div>
-  <div class="sheet-foot">
-    <div class="total"><span>Precio</span><span class="price" id="pdPrice"></span></div>
-    <button class="btn solid" type="button" id="pdAdd">Elige una talla</button>
-  </div>
-</aside>
 
 <aside class="sheet" id="cart" hidden aria-labelledby="cartTitle">
   <div class="sheet-head"><h2 id="cartTitle">Tu pedido</h2><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>

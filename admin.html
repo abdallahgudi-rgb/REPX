@@ -81,11 +81,17 @@
   .check { display: flex; gap: 10px; align-items: center; }
   .check input { width: 20px; height: 20px; accent-color: var(--plum); }
   .sheet .sheet-body .field input[type="file"] { padding: 8px; }
+  .ayuda { max-width: 720px; }
+  .ayuda details { border: 1px solid var(--line); background: var(--iron); }
+  .ayuda summary { cursor: pointer; padding: 14px 16px; font-family: var(--display); font-weight: 800; font-size: 20px; text-transform: uppercase; letter-spacing: .02em; }
+  .ayuda ol, .ayuda ul { margin: 0; padding: 0 18px 16px 36px; display: grid; gap: 8px; color: var(--bone); }
+  .ayuda b { color: var(--bone); }
 </style>
 </head>
 <body>
 
-<div class="wrap login" id="loginView">
+<p class="hint wrap" id="cargandoPanel" style="padding-block:40px">Cargando panel…</p>
+<div class="wrap login" id="loginView" hidden>
   <form id="loginForm" novalidate>
     <img src="img/logo-repx.png" alt="REPX">
     <h2>Equipo</h2>
@@ -109,6 +115,7 @@
       <button role="tab" aria-selected="true" data-tab="pedidos">Pedidos<b id="pendCount" hidden>0</b></button>
       <button role="tab" aria-selected="false" data-tab="productos">Productos</button>
       <button role="tab" aria-selected="false" data-tab="ventas">Ventas</button>
+      <button role="tab" aria-selected="false" data-tab="ayuda">Ayuda</button>
     </div>
 
     <div class="pane" id="tab-pedidos">
@@ -155,6 +162,43 @@
       <div class="table-wrap"><table id="tPago"></table></div>
       <h3 class="sub">Meses anteriores</h3>
       <div class="table-wrap"><table id="tMeses"></table></div>
+    </div>
+
+    <div class="pane ayuda" id="tab-ayuda" hidden>
+      <p class="hint" style="font-size:15px">Todo lo de esta página funciona solo. No necesitas a nadie para cargar productos, cobrar o ver tus ventas.</p>
+      <details open><summary>Cargar un producto nuevo</summary>
+        <ol><li>Ve a <b>Productos</b> y toca <b>+ Nuevo producto</b>.</li>
+        <li>Toca <b>+ Agregar fotos</b> y escoge hasta 6. La primera es la que sale en la tienda; cambia la principal con <b>Hacer principal</b>.</li>
+        <li>Escribe nombre, precio en dólares, si es de Hombre o Mujer y el <b>Tipo de prenda</b> (Jogger, Franela, Top…). El tipo es lo que usan los clientes para filtrar y buscar.</li>
+        <li>En <b>Tallas</b> toca los botones (+ S, + M…) y escribe cuántas unidades hay de cada una. Una talla en 0 sale tachada.</li>
+        <li>Toca <b>Guardar producto</b>. Aparece en la tienda al instante.</li></ol></details>
+      <details><summary>Sumar o quitar piezas del inventario</summary>
+        <ol><li>En <b>Productos</b> busca la prenda con la barra de búsqueda.</li>
+        <li>Toca <b>+</b> o <b>−</b> al lado de cada talla. Se guarda solo.</li>
+        <li>Usa los filtros <b>Quedan pocas</b> y <b>Agotados</b> para saber qué reponer.</li>
+        <li><b>Marcar agotado</b> deja el producto visible pero sin poder pedirlo.</li></ol></details>
+      <details><summary>Cuando llega un pedido</summary>
+        <ol><li>Te llega un mensaje por WhatsApp con el número de pedido (por ejemplo #AB12C) y en <b>Pedidos</b> aparece como <b>pendiente</b>.</li>
+        <li>Toca <b>WhatsApp al cliente</b> para responderle con el resumen y mandarle los datos de pago.</li>
+        <li>Cuando pague, toca <b>Marcar pagado</b>: se descuentan las piezas del inventario y la venta suma al mes.</li>
+        <li>Si no se concreta, toca <b>Cancelar</b>. Si lo habías marcado pagado por error, <b>Volver a pendiente</b> devuelve las piezas.</li></ol></details>
+      <details><summary>Ventas fuera de la página</summary>
+        <ol><li>En <b>Pedidos</b> toca <b>+ Venta manual</b> (ventas en persona, Instagram, etc.).</li>
+        <li>Escoge producto, talla, cantidad y método de pago. Se registra como pagada y descuenta del inventario.</li></ol></details>
+      <details><summary>Ver cuánto vendieron</summary>
+        <ol><li>En <b>Ventas</b> escoge el mes: ves total vendido, pedidos, piezas, lo que más se vendió y por qué método pagaron.</li></ol></details>
+      <details><summary>Contraseña y acceso</summary>
+        <ol><li>Solo entran los correos del equipo (tú y tu socia).</li>
+        <li>Si olvidas la contraseña: cierra sesión, escribe tu correo y toca <b>Olvidé mi contraseña</b>. Revisa también spam.</li>
+        <li>Para agregar o quitar a alguien del equipo hace falta cambiar la lista de correos en el código y en las reglas de Firebase.</li></ol></details>
+      <details><summary>Si algo no funciona</summary>
+        <ol><li>Cierra la página y ábrela de nuevo (en el teléfono, ciérrala desde las apps abiertas).</li>
+        <li>Revisa tu conexión a internet.</li>
+        <li>Si el panel muestra un mensaje en rojo, tómale captura: ahí dice qué falló.</li>
+        <li>Tus datos están seguros en Firebase (console.firebase.google.com, proyecto repx-67f15). La página está en Cloudflare y el código en GitHub (abdallahgudi-rgb/REPX).</li></ol></details>
+      <details><summary>Links importantes</summary>
+        <ul><li>Tienda: <b>repx.repxve.workers.dev</b></li><li>Panel: <b>repx.repxve.workers.dev/admin.html</b></li>
+        <li>Firebase: <b>console.firebase.google.com</b> → proyecto repx-67f15</li><li>Cloudflare: <b>dash.cloudflare.com</b> → Workers &amp; Pages → repx</li></ul></details>
     </div>
   </div>
 </div>

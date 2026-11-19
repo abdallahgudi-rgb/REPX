@@ -1,7 +1,23 @@
 // Datos y utilidades compartidas (sin cargar Firebase, para que la tienda sea rápida)
 export const ADMINS = ["abdallahgudi@gmail.com", "samu_428@hotmail.com"];
 export const WHATSAPP_REPX = "584126133198";
-export const TIPOS_PRENDA = ["Camiseta", "Tank", "Top", "Short", "Leggings", "Set", "Vestido", "Falda", "Sudadera", "Accesorio"];
+// Tipos de prenda agrupados por familia. "sin" son palabras que la gente busca y deben encontrar esa familia.
+export const FAMILIAS = [
+  { f: "Franelas", tipos: ["Franela", "Franela oversize", "Manga larga", "Esqueleto", "Polo"], sin: ["franela", "camiseta", "camisa", "remera", "playera", "t-shirt", "tshirt", "oversize", "manga", "esqueleto", "tank", "musculosa", "polo"] },
+  { f: "Tops", tipos: ["Top deportivo", "Crop top", "Bra deportivo"], sin: ["top", "crop", "bra", "sosten", "sujetador", "brasier", "bralette"] },
+  { f: "Pantalones", tipos: ["Jogger", "Mono", "Pantalón deportivo", "Leggings"], sin: ["pantalon", "jogger", "mono", "licra", "malla", "calza", "legging", "pants", "deportivo"] },
+  { f: "Shorts", tipos: ["Short", "Short 2 en 1", "Biker short"], sin: ["short", "bermuda", "biker", "ciclista", "licra corta"] },
+  { f: "Faldas y vestidos", tipos: ["Falda", "Falda short", "Vestido"], sin: ["falda", "skort", "vestido", "enterizo corto"] },
+  { f: "Conjuntos", tipos: ["Conjunto", "Enterizo"], sin: ["conjunto", "set", "combo", "enterizo", "braga", "bodysuit", "jumpsuit"] },
+  { f: "Abrigos", tipos: ["Sudadera", "Hoodie", "Chaqueta"], sin: ["sudadera", "hoodie", "capucha", "sueter", "sweater", "buzo", "chaqueta", "rompevientos", "abrigo"] },
+  { f: "Accesorios", tipos: ["Gorra", "Medias", "Bolso", "Toalla", "Termo", "Accesorio"], sin: ["gorra", "media", "calcetin", "bolso", "morral", "toalla", "termo", "botella", "shaker", "accesorio"] },
+];
+export const TIPOS_PRENDA = FAMILIAS.flatMap(x => x.tipos);
+// Nombres que se usaron antes, para que los productos viejos sigan funcionando
+const VIEJOS = { "Camiseta": "Franela", "Tank": "Esqueleto", "Top": "Top deportivo", "Set": "Conjunto" };
+export const tipoDe = p => { const t = (p && p.tipo) || ""; return VIEJOS[t] || t; };
+export const familiaDe = p => { const t = tipoDe(p); return t ? (FAMILIAS.find(x => x.tipos.includes(t))?.f || "") : ""; };
+export const sinonimosDe = p => { const f = FAMILIAS.find(x => x.f === familiaDe(p)); return f ? [f.f, ...f.sin].join(" ") : ""; };
 export const METODOS_PAGO = ["Pago móvil", "Efectivo", "PayPal", "Binance", "Zinli"];
 
 // Utilidades compartidas

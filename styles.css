@@ -254,3 +254,13 @@ a.card { color: inherit; text-decoration: none; }
 .ticker .t-dog { height: 30px; margin: -4px 20px 0; }
 .ticker .t-logo { height: 20px; margin-top: -3px; }
 .store .hero-actions { gap: 22px 16px; }
+
+/* familias de prenda */
+.tipos.sub button { font-size: 13px; padding: 6px 12px; border-style: dashed; }
+.tipos.sub button[aria-pressed="true"] { background: var(--bone); border-color: var(--bone); color: var(--ink); border-style: solid; }
+#tienda, #comprar, #manifiesto { scroll-margin-top: calc(64px + env(safe-area-inset-top, 0px)); }
+/* pie de página */
+.foot { display: grid !important; grid-template-columns: auto 1fr auto; align-items: center; gap: 24px; }
+.foot-info { display: grid; gap: 4px; justify-items: start; }
+.foot-wa { font-family: var(--display); font-weight: 800; font-size: 26px; color: var(--bone) !important; text-decoration: none; letter-spacing: .02em; }
+@media (max-width: 720px) { .foot { grid-template-columns: 1fr; gap: 16px; } }

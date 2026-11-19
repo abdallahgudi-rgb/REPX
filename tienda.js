@@ -1,9 +1,9 @@
-import { WHATSAPP_REPX, METODOS_PAGO, TIPOS_PRENDA, dinero, codigo, esc, stockTotal, estaAgotado } from "./comun.js";
+import { WHATSAPP_REPX, METODOS_PAGO, FAMILIAS, tipoDe, familiaDe, sinonimosDe, dinero, codigo, esc, stockTotal, estaAgotado } from "./comun.js";
 import { listar, crear } from "./rest.js";
 
 const $ = s => document.querySelector(s);
 let productos = [];
-let filtro = "todo", tipo = "", busqueda = "";
+let filtro = "todo", familia = "", tipo = "", busqueda = "";
 const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 const raiz = w => w.length > 4 && w.endsWith("es") ? w.slice(0, -2) : w.length > 3 && w.endsWith("s") ? w.slice(0, -1) : w;
 // El carrito se guarda en el teléfono. Siempre se vuelve a leer antes de usarlo,
@@ -60,23 +60,35 @@ async function cargar() {
   }
 }
 function pintarTipos() {
-  const hay = TIPOS_PRENDA.filter(x => productos.some(p => p.tipo === x));
-  $("#tipos").innerHTML = hay.length ? [`<button type="button" data-t="" aria-pressed="${!tipo}">Todas</button>`,
-    ...hay.map(x => `<button type="button" data-t="${x}" aria-pressed="${tipo === x}">${x}</button>`)].join("") : "";
+  const delGenero = productos.filter(p => filtro === "todo" || p.categoria === filtro);
+  const fams = FAMILIAS.filter(x => delGenero.some(p => familiaDe(p) === x.f));
+  if (familia && !fams.some(x => x.f === familia)) { familia = ""; tipo = ""; }
+  $("#tipos").innerHTML = fams.length ? [`<button type="button" data-fam="" aria-pressed="${!familia}">Todo</button>`,
+    ...fams.map(x => `<button type="button" data-fam="${x.f}" aria-pressed="${familia === x.f}">${x.f}</button>`)].join("") : "";
+  const subs = familia ? FAMILIAS.find(x => x.f === familia).tipos.filter(tp => delGenero.some(p => tipoDe(p) === tp)) : [];
+  if (tipo && !subs.includes(tipo)) tipo = "";
+  $("#subtipos").innerHTML = subs.length > 1 ? [`<button type="button" data-t="" aria-pressed="${!tipo}">Todos</button>`,
+    ...subs.map(x => `<button type="button" data-t="${x}" aria-pressed="${tipo === x}">${x}</button>`)].join("") : "";
 }
+let ampliada = false; // true si la búsqueda directa no encontró nada y se usan palabras parecidas
 function coincide(p) {
   if (!busqueda) return true;
-  const texto = norm([p.nombre, p.tipo, p.descripcion, p.categoria].join(" "));
+  const gen = { hombre: "hombre caballero", mujer: "mujer dama" }[p.categoria] || "";
+  const texto = norm([p.nombre, tipoDe(p), familiaDe(p), p.descripcion, gen, ampliada ? sinonimosDe(p) : ""].join(" "));
   return norm(busqueda).split(/\s+/).filter(Boolean).every(w => texto.includes(raiz(w)));
 }
 function render() {
   pintarTipos();
-  const lista = productos.filter(p => (filtro === "todo" || p.categoria === filtro) && (!tipo || p.tipo === tipo) && coincide(p));
+  const filtrar = () => productos.filter(p => (filtro === "todo" || p.categoria === filtro)
+    && (!familia || familiaDe(p) === familia) && (!tipo || tipoDe(p) === tipo) && coincide(p));
+  ampliada = false;
+  let lista = filtrar();
+  if (!lista.length && busqueda) { ampliada = true; lista = filtrar(); }
   if (!lista.length) {
     const msg = !productos.length ? "Muy pronto vas a ver los productos aquí."
-      : busqueda ? `No encontramos "${esc(busqueda)}". Prueba con otra palabra, como camiseta o short.`
+      : busqueda ? `No encontramos "${esc(busqueda)}". Prueba con otra palabra, como franela, jogger o short.`
       : "No hay productos con ese filtro por ahora.";
-    $("#grid").innerHTML = `<div class="empty"><img src="img/bulldog.webp" alt=""><p>${msg}</p>${busqueda || tipo || filtro !== "todo" ? `<button class="btn" type="button" id="verTodo">Ver todo</button>` : ""}</div>`;
+    $("#grid").innerHTML = `<div class="empty"><img src="img/bulldog.webp" alt=""><p>${msg}</p>${busqueda || familia || filtro !== "todo" ? `<button class="btn" type="button" id="verTodo">Ver todo</button>` : ""}</div>`;
     $("#verTodo")?.addEventListener("click", limpiarFiltros);
     return;
   }
@@ -86,7 +98,7 @@ function render() {
     return `<a class="card${out ? " out" : ""}" href="producto.html?id=${encodeURIComponent(p.id)}">
       <div class="ph">${p.foto ? `<img src="${p.foto}" alt="${esc(p.nombre)}" loading="lazy">` : ""}${out ? `<span class="tag out">Agotado</span>` : ""}</div>
       <div class="row"><h3>${esc(p.nombre)}</h3><span class="price">${dinero(p.precio)}</span></div>
-      <span class="meta">${p.tipo ? esc(p.tipo) + " · " : ""}${out ? "Sin disponibilidad" : "Tallas " + esc(tallas.join(" · "))}</span>
+      <span class="meta">${tipoDe(p) ? esc(tipoDe(p)) + " · " : ""}${out ? "Sin disponibilidad" : "Tallas " + esc(tallas.join(" · "))}</span>
     </a>`;
   }).join("");
 }
@@ -94,7 +106,8 @@ document.querySelectorAll("#genero button").forEach(b => b.addEventListener("cli
   document.querySelectorAll("#genero button").forEach(x => x.setAttribute("aria-pressed", x === b));
   filtro = b.dataset.f; render();
 }));
-$("#tipos").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; tipo = b.dataset.t; render(); });
+$("#tipos").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; familia = b.dataset.fam; tipo = ""; render(); });
+$("#subtipos").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; tipo = b.dataset.t; render(); });
 let tq;
 $("#q").addEventListener("input", () => {
   $("#qClear").hidden = !$("#q").value;
@@ -103,53 +116,18 @@ $("#q").addEventListener("input", () => {
 $("#q").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("#q").blur(); } });
 $("#qClear").addEventListener("click", () => { $("#q").value = ""; $("#qClear").hidden = true; busqueda = ""; render(); $("#q").focus(); });
 function limpiarFiltros() {
-  busqueda = ""; tipo = ""; filtro = "todo"; $("#q").value = ""; $("#qClear").hidden = true;
+  busqueda = ""; familia = ""; tipo = ""; filtro = "todo"; $("#q").value = ""; $("#qClear").hidden = true;
   document.querySelectorAll("#genero button").forEach(x => x.setAttribute("aria-pressed", x.dataset.f === "todo"));
   render();
 }
 
 /* ---------- paneles ---------- */
 function open(id) { $("#scrim").hidden = false; $(id).hidden = false; }
-function closeAll() { $("#scrim").hidden = true; $("#product").hidden = true; $("#cart").hidden = true; }
+function closeAll() { $("#scrim").hidden = true; $("#cart").hidden = true; }
 document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", closeAll));
 $("#scrim").addEventListener("click", closeAll);
 document.addEventListener("keydown", e => { if (e.key === "Escape") { closeAll(); cerrarInstalar(); } });
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(t._h); t._h = setTimeout(() => t.hidden = true, 2400); }
-
-/* ---------- ficha de producto ---------- */
-let actual = null, talla = null;
-$("#grid").addEventListener("click", e => {
-  const c = e.target.closest(".card[data-id]"); if (!c) return;
-  actual = productos.find(p => p.id === c.dataset.id); talla = null;
-  const out = estaAgotado(actual);
-  $("#pdCat").textContent = { hombre: "Hombre", mujer: "Mujer" }[actual.categoria] || "";
-  $("#pdImg").src = actual.foto || ""; $("#pdImg").alt = actual.nombre; $("#pdImg").hidden = !actual.foto;
-  $("#pdTitle").textContent = actual.nombre; $("#pdDesc").textContent = actual.descripcion || "";
-  $("#pdPrice").textContent = dinero(actual.precio);
-  $("#pdSizes").innerHTML = (actual.tallas || []).map(t =>
-    `<button type="button" aria-pressed="false" data-t="${esc(t.t)}" ${out || t.stock <= 0 ? "disabled" : ""}>${esc(t.t)}</button>`).join("");
-  $("#pdStock").textContent = out ? "Este producto está agotado por ahora." : "";
-  $("#pdAdd").textContent = out ? "Agotado" : "Elige una talla";
-  $("#pdAdd").disabled = out;
-  open("#product");
-});
-$("#pdSizes").addEventListener("click", e => {
-  const b = e.target.closest("button"); if (!b || b.disabled) return;
-  talla = b.dataset.t;
-  $("#pdSizes").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
-  const st = actual.tallas.find(t => t.t === talla).stock;
-  $("#pdStock").textContent = st <= 3 ? `Quedan ${st} en talla ${talla}.` : "";
-  $("#pdAdd").textContent = "Agregar al carrito";
-});
-$("#pdAdd").addEventListener("click", () => {
-  if (!talla) { toast("Elige una talla primero"); return; }
-  leerCarrito();
-  const st = actual.tallas.find(t => t.t === talla)?.stock || 0;
-  const ex = cart.find(l => l.id === actual.id && l.talla === talla);
-  if ((ex?.qty || 0) + 1 > st) { toast(`Solo quedan ${st} en talla ${talla}`); return; }
-  ex ? ex.qty++ : cart.push({ id: actual.id, talla, qty: 1 });
-  save(); count(); closeAll(); toast(`${actual.nombre} (${talla}) agregado`);
-});
 
 /* ---------- carrito y pedido ---------- */
 const prod = id => productos.find(p => p.id === id);
@@ -307,8 +285,8 @@ let visto = false;
 try { visto = localStorage.getItem("repx-aviso-app") === "1"; } catch (e) {}
 if (standalone) {
   $("#tabInstall").hidden = true; document.querySelector(".tabbar").style.gridTemplateColumns = "repeat(3, 1fr)";
-} else if (!visto) {
-  setTimeout(abrirInstalar, 1200);
+} else if (!visto && !location.hash) {
+  setTimeout(() => { if ($("#cart").hidden) abrirInstalar(); }, 1500);
 }
 const tabs = [...document.querySelectorAll(".tabbar a")];
 addEventListener("scroll", () => {
